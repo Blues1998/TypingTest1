@@ -1,9 +1,12 @@
-import tkinter as tk
-from tkinter import simpledialog, ttk
-import time
-import random
 import csv
 import os
+import random
+import time
+import tkinter as tk
+from tkinter import simpledialog, ttk, messagebox
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 SENTENCE_FILE = "sentences.txt"
 LONG_TEXT_FILE = "long_texts.txt"
@@ -14,7 +17,17 @@ class TypingApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Typing Test")
-        self.geometry("900x600")
+        self.geometry("1100x800")
+        self.configure(bg="#121212")  # dark mode background
+
+        # ttk styling for dark mode
+        style = ttk.Style(self)
+        style.theme_use("clam")
+        style.configure("TButton", font=("Helvetica", 14), padding=10,
+                        background="#333333", foreground="white")
+        style.map("TButton", background=[("active", "#444444")])
+        style.configure("TLabel", background="#121212", foreground="white", font=("Helvetica", 14))
+        style.configure("TEntry", fieldbackground="#1e1e1e", foreground="white", insertcolor="white")
 
         self.sentences = self.load_sentences(SENTENCE_FILE)
         self.long_texts = self.load_sentences(LONG_TEXT_FILE)
@@ -32,7 +45,7 @@ class TypingApp(tk.Tk):
         if self.current_frame:
             self.current_frame.destroy()
         self.current_frame = frame_class(self, **kwargs)
-        self.current_frame.pack(fill="both", expand=True)
+        self.current_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
     def get_high_score(self):
         if not os.path.exists(SCORES_FILE):
@@ -48,22 +61,26 @@ class TypingApp(tk.Tk):
 
 class MainMenuFrame(tk.Frame):
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, bg="#121212")
 
         high_score = master.get_high_score()
 
-        tk.Label(self, text="Typing Test", font=("Helvetica", 28, "bold")).pack(pady=20)
-        tk.Label(self, text=f"🏆 High Score: {high_score:.2f} WPM", font=("Helvetica", 16)).pack(pady=10)
+        tk.Label(self, text="⌨ Typing Test", font=("Helvetica", 36, "bold"),
+                 bg="#121212", fg="white").pack(pady=20)
+        tk.Label(self, text=f"🏆 High Score: {high_score:.2f} WPM",
+                 font=("Helvetica", 18), bg="#121212", fg="white").pack(pady=10)
 
-        tk.Label(self, text="Choose Mode:", font=("Helvetica", 16, "bold")).pack(pady=10)
+        tk.Label(self, text="Choose Mode:", font=("Helvetica", 20, "bold"),
+                 bg="#121212", fg="white").pack(pady=10)
 
-        tk.Button(self, text="Stopwatch Mode", font=("Helvetica", 14),
-                  command=lambda: master.switch_frame(TypingFrame, mode="stopwatch")).pack(pady=5)
+        ttk.Button(self, text="Stopwatch Mode",
+                   command=lambda: master.switch_frame(TypingFrame, mode="stopwatch")).pack(pady=8)
 
-        tk.Button(self, text="Countdown Mode (60s)", font=("Helvetica", 14),
-                  command=lambda: master.switch_frame(TypingFrame, mode="countdown")).pack(pady=5)
+        ttk.Button(self, text="Countdown Mode (60s)",
+                   command=lambda: master.switch_frame(TypingFrame, mode="countdown")).pack(pady=8)
 
-        tk.Label(self, text="Choose Text:", font=("Helvetica", 16, "bold")).pack(pady=15)
+        tk.Label(self, text="Choose Text:", font=("Helvetica", 20, "bold"),
+                 bg="#121212", fg="white").pack(pady=15)
 
         # Dropdown for text selection
         self.selected_text = tk.StringVar(value="Random")
@@ -71,16 +88,18 @@ class MainMenuFrame(tk.Frame):
         dropdown = ttk.Combobox(self, textvariable=self.selected_text, values=texts, width=80)
         dropdown.pack(pady=5)
 
-        tk.Button(self, text="Start with Selected Text", font=("Helvetica", 14),
-                  command=self.start_with_selected).pack(pady=10)
+        ttk.Button(self, text="Start with Selected Text",
+                   command=self.start_with_selected).pack(pady=10)
 
-        # Add custom text
-        tk.Button(self, text="+ Add Custom Text", font=("Helvetica", 14),
-                  command=self.add_custom_text).pack(pady=10)
+        ttk.Button(self, text="+ Add Custom Text",
+                   command=self.add_custom_text).pack(pady=10)
 
-        # View history
-        tk.Button(self, text="View History", font=("Helvetica", 14),
-                  command=lambda: master.switch_frame(HistoryFrame)).pack(pady=20)
+        ttk.Button(self, text="📊 View History",
+                   command=lambda: master.switch_frame(HistoryFrame)).pack(pady=20)
+
+        tk.Label(self, text="ℹ Pick a mode & passage, then type away!\n"
+                            "Your score will be saved automatically.",
+                 font=("Helvetica", 12), bg="#121212", fg="gray").pack(pady=10)
 
     def start_with_selected(self):
         text = self.selected_text.get()
@@ -92,14 +111,18 @@ class MainMenuFrame(tk.Frame):
     def add_custom_text(self):
         custom_text = simpledialog.askstring("Add Custom Text", "Enter your custom passage:")
         if custom_text:
+            custom_text = custom_text.strip()
+            if custom_text in self.master.sentences:
+                messagebox.showinfo("Duplicate Text", "This text already exists!")
+                return
             with open(SENTENCE_FILE, "a") as f:
-                f.write(custom_text.strip() + "\n")
-            self.master.sentences.append(custom_text.strip())
+                f.write(custom_text + "\n")
+            self.master.sentences.append(custom_text)
 
 
 class TypingFrame(tk.Frame):
     def __init__(self, master, mode="stopwatch", text=None):
-        super().__init__(master)
+        super().__init__(master, bg="#121212")
         self.master = master
         self.mode = mode
 
@@ -116,29 +139,44 @@ class TypingFrame(tk.Frame):
         self.running = False
         self.time_limit = 60 if mode == "countdown" else None
 
+        tk.Label(self, text="Type the text below:", font=("Helvetica", 18, "bold"),
+                 bg="#121212", fg="white").pack(pady=10)
+
         # Sentence display
-        self.text_display = tk.Text(self, font=("Helvetica", 16), wrap="word", height=6, width=90)
+        self.text_display = tk.Text(
+            self, font=("Helvetica", 16), wrap="word", height=6, width=90,
+            bg="#1e1e1e", fg="white", padx=10, pady=10, relief="solid", bd=1
+        )
         self.text_display.pack(pady=20)
         self.text_display.insert("1.0", self.text_to_type)
         self.text_display.config(state="disabled")
 
-        # Typing entry
-        self.entry = tk.Entry(self, font=("Helvetica", 14), width=90)
-        self.entry.pack(pady=10)
+        # Typing field (multiline now)
+        self.entry = tk.Text(self, font=("Helvetica", 14), height=5, width=90,
+                             bg="#1e1e1e", fg="white", insertbackground="white", wrap="word")
+        self.entry.pack(pady=10, ipady=6)
         self.entry.bind("<KeyRelease>", self.check_typing)
         self.entry.bind("<Return>", self.calculate_results)
 
+        # Instruction label
+        tk.Label(self, text="↵ Press Enter to submit & finish the test.",
+                 font=("Helvetica", 12), bg="#121212", fg="gray").pack(pady=5)
+
         # Timer
-        self.timer_label = tk.Label(self, text="Time: 0.00s", font=("Helvetica", 14))
+        self.timer_label = tk.Label(self, text="Time: 0.00s", font=("Helvetica", 16),
+                                    bg="#121212", fg="white")
         self.timer_label.pack(pady=10)
 
         # Results
-        self.result_label = tk.Label(self, text="", font=("Helvetica", 14))
+        self.result_label = tk.Label(self, text="", font=("Helvetica", 16),
+                                     bg="#121212", fg="white", pady=10)
         self.result_label.pack(pady=15)
 
-        # Back button
-        tk.Button(self, text="⬅ Back to Menu", font=("Helvetica", 14),
-                  command=lambda: master.show_main_menu()).pack(side="left", padx=20, pady=10)
+        # Bottom frame for menu button (always visible)
+        bottom_frame = tk.Frame(self, bg="#121212")
+        bottom_frame.pack(side="bottom", pady=15, fill="x")
+        ttk.Button(bottom_frame, text="⬅ Back to Menu",
+                   command=lambda: master.show_main_menu()).pack()
 
     def start_timer(self):
         if not self.running:
@@ -160,10 +198,10 @@ class TypingFrame(tk.Frame):
             self.after(100, self.update_timer)
 
     def check_typing(self, event):
-        if self.start_time is None and self.entry.get():
+        if self.start_time is None and self.entry.get("1.0", "end-1c").strip():
             self.start_timer()
 
-        typed_text = self.entry.get()
+        typed_text = self.entry.get("1.0", "end-1c")
         self.text_display.config(state="normal")
         self.text_display.delete("1.0", "end")
 
@@ -175,7 +213,7 @@ class TypingFrame(tk.Frame):
                     self.text_display.insert("end", char, "wrong")
             else:
                 self.text_display.insert("end", char)
-        self.text_display.tag_config("correct", foreground="green")
+        self.text_display.tag_config("correct", foreground="lightgreen")
         self.text_display.tag_config("wrong", foreground="red")
         self.text_display.config(state="disabled")
 
@@ -185,7 +223,7 @@ class TypingFrame(tk.Frame):
         self.running = False
 
         elapsed = time.time() - self.start_time if self.start_time else 0
-        typed_text = self.entry.get()
+        typed_text = self.entry.get("1.0", "end-1c")
 
         correct_chars = sum(1 for a, b in zip(typed_text, self.text_to_type) if a == b)
         accuracy = (correct_chars / len(self.text_to_type)) * 100 if self.text_to_type else 0
@@ -202,35 +240,104 @@ class TypingFrame(tk.Frame):
         self.save_score(elapsed, wpm, accuracy)
 
     def save_score(self, time_taken, wpm, accuracy):
-        new_entry = [f"{time_taken:.2f}", f"{wpm:.2f}", f"{accuracy:.2f}%"]
-        file_exists = os.path.exists(SCORES_FILE)
-        with open(SCORES_FILE, "a", newline="") as f:
-            writer = csv.writer(f)
-            if not file_exists:
-                writer.writerow(["Time Taken (s)", "WPM", "Accuracy"])
-            writer.writerow(new_entry)
+        new_entry = {"Time": f"{time_taken:.2f}", "WPM": f"{wpm:.2f}", "Accuracy": f"{accuracy:.2f}"}
+
+        scores = []
+        if os.path.exists(SCORES_FILE):
+            with open(SCORES_FILE, "r") as f:
+                reader = csv.DictReader(f)
+                scores = list(reader)
+
+        scores.append(new_entry)
+        # Keep only top 5 by WPM
+        scores = sorted(scores, key=lambda x: float(x["WPM"]), reverse=True)[:5]
+
+        with open(SCORES_FILE, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["Time", "WPM", "Accuracy"])
+            writer.writeheader()
+            writer.writerows(scores)
 
 
 class HistoryFrame(tk.Frame):
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, bg="#121212")
 
-        tk.Label(self, text="Score History", font=("Helvetica", 20, "bold")).pack(pady=10)
-
-        text_widget = tk.Text(self, font=("Helvetica", 12), width=80, height=20)
-        text_widget.pack(padx=10, pady=10)
+        tk.Label(self, text="📊 Top 5 Scores", font=("Helvetica", 24, "bold"),
+                 bg="#121212", fg="white").pack(pady=10)
 
         if os.path.exists(SCORES_FILE):
+            times, wpms, accuracies = [], [], []
             with open(SCORES_FILE, "r") as f:
-                for line in f:
-                    text_widget.insert("end", line)
+                reader = csv.DictReader(f)
+                rows = list(reader)
+                for i, row in enumerate(rows):
+                    times.append(i + 1)
+                    wpms.append(float(row["WPM"]))
+                    accuracies.append(float(row["Accuracy"]))
+
+            # --- Graph with visible axes ---
+            # --- Graph with visible axes ---
+            fig, ax = plt.subplots(figsize=(6, 3), dpi=100)
+            ax.plot(times, wpms, marker="o", color="cyan", label="WPM")
+
+            ax.set_facecolor("#1e1e1e")
+            fig.patch.set_facecolor("#121212")
+
+            ax.set_title("Progress Over Time", color="white")
+            ax.set_xlabel("Test Rank", color="white")
+            ax.set_ylabel("Words per Minute", color="white")
+
+            ax.tick_params(colors="white")
+            for spine in ax.spines.values():
+                spine.set_color("white")
+            ax.grid(True, color="#333333")
+            ax.legend(facecolor="#121212", edgecolor="white", labelcolor="white")
+
+            fig.tight_layout(pad=2, rect=[0, 0.05, 1, 1])  # 🔧 avoids xlabel clipping
+
+            graph_frame = tk.Frame(self, bg="#121212")
+            graph_frame.pack(pady=(10, 5), fill="x")
+
+            canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack()
+
+            # --- Pretty Table ---
+            columns = ("time", "wpm", "accuracy")
+            tree = ttk.Treeview(self, columns=columns, show="headings", height=5)
+            tree.pack(pady=10, padx=20, fill="both", expand=True)
+
+            style = ttk.Style(self)
+            style.configure("Treeview",
+                            background="#1e1e1e",
+                            foreground="white",
+                            fieldbackground="#1e1e1e",
+                            rowheight=25,
+                            font=("Helvetica", 12))
+            style.configure("Treeview.Heading",
+                            background="#333333",
+                            foreground="white",
+                            font=("Helvetica", 13, "bold"))
+
+            tree.heading("time", text="Time Taken (s)")
+            tree.heading("wpm", text="WPM")
+            tree.heading("accuracy", text="Accuracy (%)")
+
+            tree.column("time", anchor="center", width=150)
+            tree.column("wpm", anchor="center", width=150)
+            tree.column("accuracy", anchor="center", width=150)
+
+            for row in rows:
+                tree.insert("", "end", values=(row["Time"], row["WPM"], row["Accuracy"]))
         else:
-            text_widget.insert("end", "No history yet.")
+            tk.Label(self, text="No history yet.", font=("Helvetica", 16),
+                     bg="#121212", fg="white").pack(pady=20)
 
-        text_widget.config(state="disabled")
-
-        tk.Button(self, text="⬅ Back to Menu", font=("Helvetica", 14),
-                  command=lambda: master.show_main_menu()).pack(pady=10)
+        # Bottom nav button (always visible)
+        bottom_frame = tk.Frame(self, bg="#121212")
+        bottom_frame.pack(side="bottom", pady=15, fill="x")
+        ttk.Button(bottom_frame, text="⬅ Back to Menu",
+                   command=lambda: master.show_main_menu()).pack()
 
 
 if __name__ == "__main__":
