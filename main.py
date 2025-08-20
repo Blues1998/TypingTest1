@@ -268,7 +268,7 @@ class TypingFrame(tk.Frame):
         typed_text = self.entry.get("1.0", "end-1c")
 
         correct_chars = sum(1 for a, b in zip(typed_text, self.text_to_type) if a == b)
-        accuracy = (correct_chars / len(self.text_to_type)) * 100 if self.text_to_type else 0
+        accuracy = (correct_chars / len(typed_text)) * 100 if self.text_to_type else 0
         words = len(typed_text) / 5
         minutes = elapsed / 60 if elapsed > 0 else 1
         wpm = words / minutes
