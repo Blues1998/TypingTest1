@@ -31,6 +31,7 @@ logging.getLogger("PIL").setLevel(logging.WARNING)
 # --------------------------
 SENTENCE_FILE = "sentences.txt"
 LONG_TEXT_FILE = "long_texts.txt"
+WORDS_FILE = "words.txt"
 SCORES_FILE = "scores.csv"
 
 # Logging setup
@@ -63,6 +64,7 @@ class TypingApp(tk.Tk):
         # Load resources
         self.sentences = self.load_sentences(SENTENCE_FILE)
         self.long_texts = self.load_sentences(LONG_TEXT_FILE)
+        self.words = self.load_sentences(WORDS_FILE)
         self.current_frame = None
 
         logger.info("Application started.")
@@ -122,6 +124,8 @@ class MainMenuFrame(tk.Frame):
                    command=lambda: master.switch_frame(TypingFrame, mode="stopwatch")).pack(pady=8)
         ttk.Button(self, text="Countdown Mode (60s)",
                    command=lambda: master.switch_frame(TypingFrame, mode="countdown")).pack(pady=8)
+        ttk.Button(self, text="Word Bubble Mode",
+                   command=lambda: master.switch_frame(BubbleFrame)).pack(pady=8)
 
         # Text selection
         tk.Label(self, text="Choose Text:", font=("Helvetica", 20, "bold"),
@@ -378,6 +382,169 @@ class HistoryFrame(tk.Frame):
 
         for row in rows:
             tree.insert("", "end", values=(row["Time"], row["WPM"], row["Accuracy"]))
+
+
+class BubbleFrame(tk.Frame):
+    """Typing game with falling word bubbles."""
+
+    def __init__(self, master):
+        super().__init__(master, bg="#121212")
+        self.master = master
+        self.running = True
+        self.strikes = 0
+        self.bubbles = []
+        self.score = 0
+        self.speed = 2  # fall speed (pixels per frame)
+        self.max_speed = 25
+        self.spawn_interval = 2500  # initial bubble spawn interval (ms)
+        self.min_spawn_interval = 1200  # minimum interval cap
+        self.words_pool = list(set(self.master.words))
+        self.used_words = set()
+
+        # Canvas for bubbles
+        self.canvas = tk.Canvas(self, bg="#121212", width=1000, height=600, highlightthickness=0)
+        self.canvas.pack(pady=20)
+
+        # Score + Strikes + Speed display
+        top_frame = tk.Frame(self, bg="#121212")
+        top_frame.pack()
+        self.score_label = tk.Label(top_frame, text="Score: 0", font=("Helvetica", 16),
+                                    bg="#121212", fg="cyan")
+        self.score_label.pack(side="left", padx=20)
+        self.strike_label = tk.Label(top_frame, text="Strikes: 0/3", font=("Helvetica", 16),
+                                     bg="#121212", fg="red")
+        self.strike_label.pack(side="left", padx=20)
+        self.speed_label = tk.Label(top_frame, text=f"Speed: {self.speed:.1f}", font=("Helvetica", 16),
+                                    bg="#121212", fg="orange")
+        self.speed_label.pack(side="left", padx=20)
+
+        # Entry for typing
+        self.entry = tk.Entry(self, font=("Helvetica", 16), bg="#1e1e1e", fg="white",
+                              insertbackground="white")
+        self.entry.pack(pady=10)
+        self.entry.bind("<KeyRelease>", self.check_word)   # instant check, no Return needed
+        self.entry.bind("<Return>", self.clear_entry)      # pressing Enter clears text
+        self.entry.focus_set()  # auto-focus input box at start
+
+        # Back button
+        ttk.Button(self, text="Back to Menu", command=self.stop_game).pack(pady=10)
+
+        # Start loop
+        self.spawn_bubble()
+        self.update_bubbles()
+
+    def stop_game(self):
+        """Exit to menu."""
+        self.running = False
+        self.master.show_main_menu()
+
+    def get_next_word(self):
+        """Pick a non-repeated word, reset pool if exhausted."""
+        if not self.words_pool:  # refill when exhausted
+            self.words_pool = list(set(self.master.words))
+            self.used_words.clear()
+        word = random.choice(self.words_pool)
+        self.words_pool.remove(word)
+        self.used_words.add(word)
+        return word
+
+    def spawn_bubble(self):
+        """Spawn a new word bubble at top."""
+        if not self.running:
+            return
+
+        word = self.get_next_word()
+        x = random.randint(100, 900)
+        y = -30
+
+        r = 40
+        circle = self.canvas.create_oval(x-r, y-r, x+r, y+r, fill="#3333aa", outline="white")
+        text = self.canvas.create_text(x, y, text=word, fill="white", font=("Helvetica", 14, "bold"))
+
+        self.bubbles.append({"word": word, "x": x, "y": y, "circle": circle, "text": text})
+
+        # Schedule next bubble using dynamic interval
+        self.after(self.spawn_interval, self.spawn_bubble)
+
+    def update_bubbles(self):
+        """Move bubbles down and check for misses."""
+        if not self.running:
+            return
+
+        to_remove = []
+        for bubble in self.bubbles:
+            bubble["y"] += self.speed
+            self.canvas.coords(bubble["circle"], bubble["x"]-40, bubble["y"]-40,
+                               bubble["x"]+40, bubble["y"]+40)
+            self.canvas.coords(bubble["text"], bubble["x"], bubble["y"])
+
+            if bubble["y"] >= 600:  # reached bottom
+                to_remove.append(bubble)
+                self.strikes += 1
+                self.strike_label.config(text=f"Strikes: {self.strikes}/3")
+
+                # Penalty: clear all bubbles on strike
+                self.clear_all_bubbles()
+
+                if self.strikes >= 3:
+                    self.game_over()
+
+        for b in to_remove:
+            self.canvas.delete(b["circle"])
+            self.canvas.delete(b["text"])
+            if b in self.bubbles:
+                self.bubbles.remove(b)
+
+        self.after(50, self.update_bubbles)  # update ~20 fps
+
+    def clear_all_bubbles(self):
+        """Remove all bubbles from the screen."""
+        for b in self.bubbles:
+            self.canvas.delete(b["circle"])
+            self.canvas.delete(b["text"])
+        self.bubbles.clear()
+
+    def check_word(self, event):
+        """Check if typed word matches a bubble instantly."""
+        typed = self.entry.get().strip()
+        if not typed:
+            return
+
+        for bubble in self.bubbles:
+            if bubble["word"] == typed:
+                self.canvas.delete(bubble["circle"])
+                self.canvas.delete(bubble["text"])
+                self.bubbles.remove(bubble)
+
+                # Update score
+                self.score += 1
+                self.score_label.config(text=f"Score: {self.score}")
+
+                # Increase fall speed (max capped)
+                if self.score % 5 == 0 and self.speed < self.max_speed:
+                    self.speed += 1
+                    self.speed_label.config(text=f"Speed: {self.speed}")
+
+                # Decrease spawn interval gradually (spawn faster)
+                if self.score % 3 == 0 and self.spawn_interval > self.min_spawn_interval:
+                    self.spawn_interval -= 100  # decrease by 100ms
+                    if self.spawn_interval < self.min_spawn_interval:
+                        self.spawn_interval = self.min_spawn_interval
+
+                # Clear entry after hit
+                self.entry.delete(0, "end")
+                break
+
+    def clear_entry(self, event):
+        """Clear input when Enter is pressed (even if no bubble matched)."""
+        self.entry.delete(0, "end")
+        return "break"  # prevent newline beep
+
+    def game_over(self):
+        """End the game after 3 strikes."""
+        self.running = False
+        self.canvas.create_text(500, 300, text=f"GAME OVER\nScore: {self.score}",
+                                fill="red", font=("Helvetica", 36, "bold"))
 
 
 if __name__ == "__main__":
