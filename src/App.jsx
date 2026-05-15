@@ -12,9 +12,16 @@ import { CodePage } from './pages/CodePage.jsx'
 import { LeaderboardPage } from './pages/LeaderboardPage.jsx'
 import { HistoryPage } from './pages/HistoryPage.jsx'
 import { AchievementsPage } from './pages/AchievementsPage.jsx'
+import { SettingsPage } from './pages/SettingsPage.jsx'
 import { AchievementToast } from './components/AchievementToast.jsx'
 
 export const DataContext = createContext(null)
+
+// Apply font preference before first paint (synchronous, runs once at module load)
+document.documentElement.setAttribute(
+  'data-font',
+  localStorage.getItem('typingtest_font') || 'jetbrains'
+)
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -29,6 +36,7 @@ function AnimatedRoutes() {
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/history"       element={<HistoryPage />} />
         <Route path="/achievements"  element={<AchievementsPage />} />
+        <Route path="/settings"      element={<SettingsPage />} />
       </Routes>
     </AnimatePresence>
   )

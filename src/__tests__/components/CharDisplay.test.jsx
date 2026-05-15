@@ -96,4 +96,40 @@ describe('CharDisplay', () => {
       expect(extraSpan).not.toBeNull()
     })
   })
+
+  describe('caretStyle prop', () => {
+    it('defaults to line style without errors', () => {
+      const chars = makeChars('hi', ['pending', 'pending'])
+      expect(() => render(<CharDisplay chars={chars} caretIndex={0} />)).not.toThrow()
+    })
+
+    it('accepts block style without errors', () => {
+      const chars = makeChars('hi', ['pending', 'pending'])
+      expect(() => render(<CharDisplay chars={chars} caretIndex={0} caretStyle="block" />)).not.toThrow()
+    })
+
+    it('accepts underline style without errors', () => {
+      const chars = makeChars('hi', ['pending', 'pending'])
+      expect(() => render(<CharDisplay chars={chars} caretIndex={0} caretStyle="underline" />)).not.toThrow()
+    })
+
+    it('renders block caret as absolute (no inline width disruption)', () => {
+      const chars = makeChars('hi', ['pending', 'pending'])
+      const { container } = render(
+        <CharDisplay chars={chars} caretIndex={0} caretStyle="block" />
+      )
+      // Block caret uses absolute inset-0 — the span at index 0 should have a child with aria-hidden
+      const spans = container.querySelectorAll('p > span')
+      expect(spans[0].querySelector('[aria-hidden]')).not.toBeNull()
+    })
+
+    it('renders trailing caret wrapper for block style when caret is past all chars', () => {
+      const chars = makeChars('hi', ['correct', 'correct'])
+      const { container } = render(
+        <CharDisplay chars={chars} caretIndex={2} caretStyle="block" />
+      )
+      // The trailing wrapper span should be present
+      expect(container.querySelector('[aria-hidden]')).not.toBeNull()
+    })
+  })
 })

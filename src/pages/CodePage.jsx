@@ -15,6 +15,7 @@ export function CodePage() {
   const data = useContext(DataContext)
   const { playClick, playError } = useSound()
   const shakeControls = useAnimation()
+  const caretStyle = localStorage.getItem('typingtest_caret_style') || 'line'
 
   const {
     text, chars, inputValue, caretIndex,
@@ -90,6 +91,7 @@ export function CodePage() {
               chars={chars}
               caretIndex={caretIndex}
               isCode
+              caretStyle={caretStyle}
             />
           </motion.div>
 

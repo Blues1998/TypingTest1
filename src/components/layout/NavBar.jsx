@@ -7,6 +7,7 @@ const links = [
   { to: '/leaderboard',   label: 'leaderboard' },
   { to: '/history',       label: 'history' },
   { to: '/achievements',  label: 'achievements' },
+  { to: '/settings',      label: 'settings' },
 ]
 
 export function NavBar() {

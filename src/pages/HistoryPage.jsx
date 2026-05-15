@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { WpmChart } from '../components/history/WpmChart.jsx'
 import { HistoryTable } from '../components/history/HistoryTable.jsx'
-import { getPersonalScores, clearPersonalScores, getStatsOverview } from '../services/scoreService.js'
+import { KeyboardHeatmap } from '../components/typing/KeyboardHeatmap.jsx'
+import { getPersonalScores, clearPersonalScores, getStatsOverview, getAggregateKeyStats } from '../services/scoreService.js'
 import { getDailyStreak } from '../utils/streakUtils.js'
 
 const MODES = [
@@ -17,10 +18,23 @@ const MODES = [
   { key: 'daily',     label: 'daily' },
 ]
 
+const TIMEFRAMES = [
+  { key: '7d',  label: '7d',   days: 7 },
+  { key: '30d', label: '30d',  days: 30 },
+  { key: '90d', label: '90d',  days: 90 },
+  { key: 'all', label: 'all',  days: null },
+]
+
 const MODE_LABELS = {
   stopwatch: 'stopwatch', countdown: 'countdown', words: 'words',
   quotes: 'quotes', bubble: 'bubbles', survival: 'survival',
   code: 'code', daily: 'daily',
+}
+
+function filterByDays(scores, days) {
+  if (!days) return scores
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
+  return scores.filter(s => s.timestamp >= cutoff)
 }
 
 function StatCard({ label, value, sub }) {
@@ -33,7 +47,7 @@ function StatCard({ label, value, sub }) {
   )
 }
 
-function StatsOverview({ overview, streak }) {
+function StatsOverview({ overview, streak, periodLabel }) {
   if (!overview) return null
 
   const modeEntries = Object.entries(overview.bestPerMode)
@@ -47,7 +61,7 @@ function StatsOverview({ overview, streak }) {
         <StatCard label="total tests" value={overview.totalTests} />
         <StatCard label="days played" value={overview.totalDays} />
         <StatCard
-          label="7-day avg"
+          label={`${periodLabel} avg`}
           value={overview.avgWpm7d !== null ? `${overview.avgWpm7d} wpm` : '-'}
           sub={overview.avgAccuracy7d !== null ? `${overview.avgAccuracy7d}% acc` : null}
         />
@@ -74,14 +88,20 @@ function StatsOverview({ overview, streak }) {
   )
 }
 
-
 export function HistoryPage() {
-  const [activeMode, setActiveMode] = useState(null)
-  const [tick, setTick] = useState(0)
+  const [activeMode,      setActiveMode]      = useState(null)
+  const [activeTimeframe, setActiveTimeframe] = useState('all')
+  const [tick,            setTick]            = useState(0)
 
-  const data = getPersonalScores(activeMode)
-  const overview = getStatsOverview()
-  const streak = getDailyStreak()
+  const activeDays = TIMEFRAMES.find(t => t.key === activeTimeframe)?.days ?? null
+  const periodLabel = activeTimeframe === 'all' ? 'all-time' : activeTimeframe
+
+  const allData = getPersonalScores(activeMode)
+  const data    = filterByDays(allData, activeDays)
+
+  const overview       = getStatsOverview(activeDays)
+  const streak         = getDailyStreak()
+  const aggregateKeys  = getAggregateKeyStats()
 
   function handleClear() {
     if (window.confirm('Clear all personal history?')) {
@@ -95,7 +115,7 @@ export function HistoryPage() {
       <div className="max-w-2xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-text text-2xl font-semibold">history</h1>
-          {data.length > 0 && (
+          {allData.length > 0 && (
             <button
               onClick={handleClear}
               className="text-xs text-sub hover:text-wrong transition-colors"
@@ -105,23 +125,39 @@ export function HistoryPage() {
           )}
         </div>
 
-        <StatsOverview overview={overview} streak={streak} />
+        <StatsOverview overview={overview} streak={streak} periodLabel={periodLabel} />
 
-        {/* Mode tabs */}
-        <div className="flex flex-wrap gap-1 mb-6 bg-surface p-1 rounded-lg w-fit border border-border">
-          {MODES.map(m => (
-            <button
-              key={String(m.key)}
-              onClick={() => setActiveMode(m.key)}
-              className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
-                activeMode === m.key
-                  ? 'bg-border text-text'
-                  : 'text-sub hover:text-text'
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+        {/* Timeframe + Mode filters */}
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          {/* Timeframe pills */}
+          <div className="flex items-center gap-1 bg-surface p-1 rounded-lg border border-border">
+            {TIMEFRAMES.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTimeframe(t.key)}
+                className={`px-2.5 py-1 rounded-md text-xs transition-colors ${
+                  activeTimeframe === t.key ? 'bg-border text-text' : 'text-sub hover:text-text'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Mode tabs */}
+          <div className="flex flex-wrap gap-1 bg-surface p-1 rounded-lg border border-border">
+            {MODES.map(m => (
+              <button
+                key={String(m.key)}
+                onClick={() => setActiveMode(m.key)}
+                className={`px-3 py-1.5 rounded-md text-sm transition-colors ${
+                  activeMode === m.key ? 'bg-border text-text' : 'text-sub hover:text-text'
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {data.length > 1 && (
@@ -131,6 +167,15 @@ export function HistoryPage() {
         )}
 
         <HistoryTable data={data} key={tick} />
+
+        {/* All-time per-key accuracy heatmap */}
+        {aggregateKeys.length > 0 && (
+          <div className="mt-8 p-5 bg-surface rounded-xl border border-border">
+            <div className="text-sub text-xs tracking-widest uppercase mb-1">all-time key accuracy</div>
+            <div className="text-sub text-[10px] mb-3">aggregated across all your tests</div>
+            <KeyboardHeatmap keyStats={aggregateKeys} />
+          </div>
+        )}
       </div>
     </PageWrapper>
   )

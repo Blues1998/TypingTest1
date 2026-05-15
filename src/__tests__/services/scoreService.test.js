@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
-  savePersonalScore, getPersonalScores, clearPersonalScores, getStatsOverview,
+  savePersonalScore, getPersonalScores, clearPersonalScores, getStatsOverview, getAggregateKeyStats,
 } from '../../services/scoreService.js'
 
 function entry(overrides = {}) {
@@ -155,5 +155,85 @@ describe('getStatsOverview', () => {
     localStorage.setItem('typingtest_scores', JSON.stringify([old]))
     const overview = getStatsOverview()
     expect(overview.avgAccuracy7d).toBeNull()
+  })
+
+  it('respects custom periodDays parameter', () => {
+    savePersonalScore(entry({ accuracy: 80, wpm: 60 }))
+    const overview30 = getStatsOverview(30)
+    expect(overview30.avgAccuracy7d).toBe(80)
+  })
+
+  it('returns all-time averages when periodDays is null', () => {
+    const old = entry({ accuracy: 50, wpm: 40 })
+    old.timestamp = Date.now() - 60 * 24 * 60 * 60 * 1000
+    localStorage.setItem('typingtest_scores', JSON.stringify([old]))
+    savePersonalScore(entry({ accuracy: 90, wpm: 80 }))
+    const overview = getStatsOverview(null)
+    expect(overview.avgAccuracy7d).toBe(70) // (50 + 90) / 2
+  })
+})
+
+// ── getAggregateKeyStats ──────────────────────────────────────────────────────
+
+describe('getAggregateKeyStats', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('returns empty array when no scores exist', () => {
+    expect(getAggregateKeyStats()).toEqual([])
+  })
+
+  it('returns empty array when scores have no keyStats', () => {
+    savePersonalScore(entry())
+    expect(getAggregateKeyStats()).toEqual([])
+  })
+
+  it('aggregates keyStats from a single score', () => {
+    savePersonalScore(entry({
+      keyStats: [{ key: 'a', accuracy: 80, errors: 2, total: 10 }],
+    }))
+    const result = getAggregateKeyStats()
+    expect(result.length).toBe(1)
+    expect(result[0].key).toBe('a')
+    expect(result[0].total).toBe(10)
+    expect(result[0].errors).toBe(2)
+    expect(result[0].accuracy).toBe(80)
+  })
+
+  it('merges keyStats across multiple scores for the same key', () => {
+    savePersonalScore(entry({
+      keyStats: [{ key: 'a', accuracy: 90, errors: 1, total: 10 }],
+    }))
+    savePersonalScore(entry({
+      keyStats: [{ key: 'a', accuracy: 70, errors: 3, total: 10 }],
+    }))
+    const result = getAggregateKeyStats()
+    expect(result.length).toBe(1)
+    expect(result[0].total).toBe(20)
+    expect(result[0].errors).toBe(4)
+    expect(result[0].accuracy).toBe(80) // (20 - 4) / 20 = 80%
+  })
+
+  it('handles multiple different keys', () => {
+    savePersonalScore(entry({
+      keyStats: [
+        { key: 'a', accuracy: 90, errors: 1, total: 10 },
+        { key: 's', accuracy: 100, errors: 0, total: 5 },
+      ],
+    }))
+    const result = getAggregateKeyStats()
+    expect(result.length).toBe(2)
+    const keys = result.map(r => r.key)
+    expect(keys).toContain('a')
+    expect(keys).toContain('s')
+  })
+
+  it('ignores scores without keyStats gracefully', () => {
+    savePersonalScore(entry()) // no keyStats
+    savePersonalScore(entry({
+      keyStats: [{ key: 'e', accuracy: 95, errors: 1, total: 20 }],
+    }))
+    const result = getAggregateKeyStats()
+    expect(result.length).toBe(1)
+    expect(result[0].key).toBe('e')
   })
 })

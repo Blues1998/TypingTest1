@@ -121,7 +121,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     const res = { wpm: finalWpm, accuracy: finalAccuracy, time: Math.round(finalElapsed * 10) / 10, wordWpms, keyStats, consistency }
     setResults(res)
     setPhase('finished')
-    savePersonalScore({ wpm: finalWpm, accuracy: finalAccuracy, timeTaken: finalElapsed, mode, difficulty, consistency })
+    savePersonalScore({ wpm: finalWpm, accuracy: finalAccuracy, timeTaken: finalElapsed, mode, difficulty, consistency, keyStats })
 
     if (mode === 'daily') {
       recordDailyCompletion()

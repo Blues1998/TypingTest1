@@ -32,6 +32,7 @@ export function TypingPage() {
   const { playClick, playError } = useSound()
   const shakeControls = useAnimation()
   const [capsLock, setCapsLock] = useState(false)
+  const caretStyle = localStorage.getItem('typingtest_caret_style') || 'line'
 
   function onInputChange(e) {
     const newVal = e.target.value
@@ -126,7 +127,7 @@ export function TypingPage() {
           </div>
 
           <motion.div animate={shakeControls}>
-            <CharDisplay chars={chars} caretIndex={caretIndex} ghostCaretIndex={ghostCaret} />
+            <CharDisplay chars={chars} caretIndex={caretIndex} ghostCaretIndex={ghostCaret} caretStyle={caretStyle} />
           </motion.div>
 
           {/* Quote author attribution */}

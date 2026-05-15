@@ -16,7 +16,7 @@ function GhostCaret() {
   )
 }
 
-export function CharDisplay({ chars, caretIndex, ghostCaretIndex = null, isCode = false }) {
+export function CharDisplay({ chars, caretIndex, ghostCaretIndex = null, isCode = false, caretStyle = 'line' }) {
   const Tag = isCode ? 'pre' : 'p'
   return (
     <Tag
@@ -35,11 +35,18 @@ export function CharDisplay({ chars, caretIndex, ghostCaretIndex = null, isCode 
           style={{ transition: 'color 60ms linear' }}
         >
           {i === ghostCaretIndex && <GhostCaret />}
-          {i === caretIndex && <Caret />}
+          {i === caretIndex && <Caret style={caretStyle} />}
           {c.char}
         </span>
       ))}
-      {caretIndex >= chars.length && <Caret />}
+      {/* Trailing caret — shown when all text is typed */}
+      {caretIndex >= chars.length && (
+        caretStyle === 'line'
+          ? <Caret style="line" />
+          : <span className="relative inline-block align-middle" style={{ width: '0.6ch', height: '1.1em' }}>
+              <Caret style={caretStyle} />
+            </span>
+      )}
     </Tag>
   )
 }
