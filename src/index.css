@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --color-bg:           #111111;
+  --color-surface:      #1a1a1a;
+  --color-border:       #2a2a2a;
+  --color-text:         #d1d1d1;
+  --color-sub:          #555555;
+  --color-main:         #e2b714;
+  --color-correct:      #a8ff78;
+  --color-wrong:        #ff4f4f;
+  --color-caret:        #e2b714;
+  --color-surface-hover:#161616;
+  --color-btn-hover:    #333333;
+  --color-code-bg:      #0d1117;
+
+  /* Keyboard heatmap key backgrounds */
+  --color-key-none:     #1e1e1e;
+  --color-key-perfect:  #1a3320;
+  --color-key-good:     #263d18;
+  --color-key-medium:   #3d3010;
+  --color-key-poor:     #3d1e0a;
+  --color-key-bad:      #3d0a0a;
+}
+
+/* ── Light theme overrides ── */
+[data-theme="light"] {
+  --color-bg:           #f0f0f0;
+  --color-surface:      #ffffff;
+  --color-border:       #e0e0e0;
+  --color-text:         #1a1a1a;
+  --color-sub:          #888888;
+  --color-main:         #c49a00;
+  --color-correct:      #2a8000;
+  --color-wrong:        #cc2200;
+  --color-caret:        #c49a00;
+  --color-surface-hover:#f0f0f0;
+  --color-btn-hover:    #e8e8e8;
+  --color-code-bg:      #f6f8fa;
+  --color-key-none:     #ebebeb;
+  --color-key-perfect:  #d4f0d4;
+  --color-key-good:     #c4e8b8;
+  --color-key-medium:   #f0e8b0;
+  --color-key-poor:     #f0d0a8;
+  --color-key-bad:      #f0c0c0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+#root {
+  min-height: 100vh;
+}

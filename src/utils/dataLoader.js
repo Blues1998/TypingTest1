@@ -1,0 +1,99 @@
+export async function loadData() {
+  const base = import.meta.env.BASE_URL
+  const get = path => fetch(`${base}${path}`).then(r => r.json())
+
+  const lang = localStorage.getItem('typingtest_lang') || 'en'
+  const langFile = lang === 'en' ? 'data/sentences.json'
+    : lang === 'es' ? 'data/sentences_es.json'
+    : lang === 'fr' ? 'data/sentences_fr.json'
+    : lang === 'de' ? 'data/sentences_de.json'
+    : 'data/sentences.json'
+
+  const [w, s, l, rs, as, es, al, el, cs, q] = await Promise.all([
+    get('data/words.json'),
+    get(langFile),
+    get('data/long_texts.json'),
+    get('data/rookie_sentences.json'),
+    get('data/advanced_sentences.json'),
+    get('data/elite_sentences.json'),
+    get('data/advanced_long_texts.json'),
+    get('data/elite_long_texts.json'),
+    get('data/code_snippets.json'),
+    get('data/quotes.json'),
+  ])
+
+  return {
+    words: w.words,
+    sentences: {
+      rookie:   rs.sentences,
+      standard: s.sentences,
+      advanced: as.sentences,
+      elite:    es.sentences,
+    },
+    longTexts: {
+      standard: l.texts,
+      advanced: al.texts,
+      elite:    el.texts,
+    },
+    codeSnippets: cs.snippets,
+    quotes: q.quotes,
+  }
+}
+
+function randomFrom(pool) {
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+function hashStr(str) {
+  return str.split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) & 0x7fffffff, 0)
+}
+
+export function pickPassage(mode, difficulty = 'standard', data, exclude = null, wordCount = 0) {
+  if (mode === 'daily') {
+    const today = new Date().toISOString().slice(0, 10)
+    const pool = [...(data.sentences?.standard || []), ...(data.sentences?.advanced || [])]
+    return pool[hashStr(today) % pool.length]
+  }
+
+  if (mode === 'quotes') {
+    const pool = data.quotes || []
+    if (!pool.length) return { text: 'No quotes available.', author: null }
+    const excludeText = typeof exclude === 'object' ? exclude?.text : exclude
+    let entry = randomFrom(pool)
+    for (let i = 0; i < 10 && entry?.text === excludeText; i++) entry = randomFrom(pool)
+    return entry
+  }
+
+  if (mode === 'words') {
+    const n = wordCount || 25
+    const pool = data.sentences[difficulty] || data.sentences.standard || []
+    const words = []
+    let attempts = 0
+    while (words.length < n + 5 && attempts < 30) {
+      const sentence = randomFrom(pool)
+      if (sentence) {
+        // Strip trailing punctuation from sentence before splitting
+        const clean = sentence.replace(/[.!?]+$/, '')
+        words.push(...clean.split(/\s+/).filter(Boolean))
+      }
+      attempts++
+    }
+    const chosen = words.slice(0, n)
+    return chosen.join(' ') + '.'
+  }
+
+  let pool
+  if (mode === 'code') {
+    pool = data.codeSnippets
+  } else if (mode === 'countdown') {
+    if (difficulty === 'rookie') pool = data.sentences.rookie || data.sentences.standard
+    else pool = data.longTexts[difficulty] || data.longTexts.standard
+  } else {
+    pool = data.sentences[difficulty] || data.sentences.standard
+  }
+
+  if (!exclude || pool.length <= 1) return randomFrom(pool)
+  let result = randomFrom(pool)
+  for (let i = 0; i < 15 && result === exclude; i++) result = randomFrom(pool)
+  return result
+}
