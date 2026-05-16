@@ -10,9 +10,16 @@ export async function loadData() {
     : lang === 'hi' ? 'data/sentences_hi.json'
     : 'data/sentences.json'
 
+  // Language file: fall back to English if the file is missing or unparseable
+  const langFetch = lang === 'en'
+    ? get(langFile)
+    : fetch(`${base}${langFile}`)
+        .then(r => (r.ok ? r.json() : get('data/sentences.json')))
+        .catch(() => get('data/sentences.json'))
+
   const [w, s, l, rs, as, esl, al, el, cs, q] = await Promise.all([
     get('data/words.json'),
-    get(langFile),
+    langFetch,
     get('data/long_texts.json'),
     get('data/rookie_sentences.json'),
     get('data/advanced_sentences.json'),
@@ -24,7 +31,7 @@ export async function loadData() {
   ])
 
   const nonEn = lang !== 'en'
-  const langSents = s.sentences
+  const langSents = s.sentences || []
 
   // For non-English, concatenate sentences into longer passages for countdown mode
   function buildLongTexts(count = 12, perText = 5) {
