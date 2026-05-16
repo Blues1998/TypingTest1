@@ -10,6 +10,79 @@ import { useTypingTest } from '../hooks/useTypingTest.js'
 import { useSound } from '../hooks/useSound.js'
 import { getDifficulty } from '../utils/levelSystem.js'
 
+const HINDI_VOWELS = [
+  ['a','अ'],['aa','आ'],['i','इ'],['ee','ई'],
+  ['u','उ'],['oo','ऊ'],['e','ए'],['ai','ऐ'],
+  ['o','ओ'],['au','औ'],
+]
+const HINDI_CONSONANTS = [
+  ['k','क'],['kh','ख'],['g','ग'],['gh','घ'],
+  ['ch','च'],['chh','छ'],['j','ज'],['jh','झ'],
+  ['t','त'],['th','थ'],['d','द'],['dh','ध'],
+  ['n','न'],['p','प'],['ph/f','फ'],['b','ब'],
+  ['bh','भ'],['m','म'],['y','य'],['r','र'],
+  ['l','ल'],['v/w','व'],['sh','श'],['s','स'],
+  ['h','ह'],['T','ट'],['Th','ठ'],['D','ड'],
+  ['Dh','ढ'],['N','ण'],['Sh','ष'],['ng','ं'],
+]
+
+function MapEntry({ lat, dev }) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-lg px-2 py-1.5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+      <span className="font-mono text-xs font-semibold" style={{ color: 'var(--color-main)' }}>{lat}</span>
+      <span className="text-[10px]" style={{ color: 'var(--color-sub)' }}>→</span>
+      <span className="text-sm" style={{ color: 'var(--color-text)', fontFamily: "'Noto Sans Devanagari', sans-serif" }}>{dev}</span>
+    </div>
+  )
+}
+
+function HindiGuideModal({ onClose }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.65)' }}
+      onClick={onClose}
+    >
+      <div
+        className="rounded-xl p-6 w-full mx-4 max-h-[85vh] overflow-y-auto"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', maxWidth: '520px' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-base" style={{ color: 'var(--color-text)' }}>Hindi transliteration guide</h2>
+          <button onClick={onClose} className="text-xl leading-none transition-colors" style={{ color: 'var(--color-sub)' }}>×</button>
+        </div>
+
+        <p className="text-xs leading-relaxed mb-5" style={{ color: 'var(--color-sub)' }}>
+          Enable <span style={{ color: 'var(--color-text)' }}>Hindi – Transliteration</span> in your OS keyboard settings
+          (macOS: System Settings → Keyboard → Input Sources) or install{' '}
+          <span style={{ color: 'var(--color-text)' }}>Google Input Tools</span> in Chrome.
+          Type the Latin sequence — your IME converts it to Devanagari automatically.
+        </p>
+
+        <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: 'var(--color-sub)', borderLeft: '2px solid var(--color-main)', paddingLeft: '8px' }}>
+          vowels · स्वर
+        </p>
+        <div className="grid grid-cols-5 gap-1.5 mb-5">
+          {HINDI_VOWELS.map(([lat, dev]) => <MapEntry key={lat} lat={lat} dev={dev} />)}
+        </div>
+
+        <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: 'var(--color-sub)', borderLeft: '2px solid var(--color-main)', paddingLeft: '8px' }}>
+          consonants · व्यंजन
+        </p>
+        <div className="grid grid-cols-4 gap-1.5 mb-4">
+          {HINDI_CONSONANTS.map(([lat, dev]) => <MapEntry key={lat} lat={lat} dev={dev} />)}
+        </div>
+
+        <p className="text-[10px] leading-relaxed" style={{ color: 'var(--color-sub)' }}>
+          Capital <span className="font-mono" style={{ color: 'var(--color-text)' }}>T Th D Dh N</span> = retroflex consonants ·
+          vowels attach to the preceding consonant automatically · double a consonant letter to add a halant (्)
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export function TypingPage() {
   const { mode } = useParams()
   const [searchParams] = useSearchParams()
@@ -32,7 +105,9 @@ export function TypingPage() {
   const { playClick, playError } = useSound()
   const shakeControls = useAnimation()
   const [capsLock, setCapsLock] = useState(false)
+  const [showHindiGuide, setShowHindiGuide] = useState(false)
   const caretStyle = localStorage.getItem('typingtest_caret_style') || 'line'
+  const lang = localStorage.getItem('typingtest_lang') || 'en'
 
   function onInputChange(e) {
     const newVal = e.target.value
@@ -84,7 +159,19 @@ export function TypingPage() {
               <span className="text-[#00ccff] text-xs">👻 vs {ghostWpm} wpm</span>
             )}
           </div>
-          <span className="text-sub text-xs">tab + enter to restart</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sub text-xs">tab + enter to restart</span>
+            {lang === 'hi' && (
+              <button
+                onClick={() => setShowHindiGuide(true)}
+                className="text-xs transition-colors"
+                style={{ color: 'var(--color-sub)' }}
+                title="transliteration guide"
+              >
+                ⌨ guide
+              </button>
+            )}
+          </div>
         </div>
 
         <TimerBar
@@ -183,6 +270,7 @@ export function TypingPage() {
         )}
       </div>
 
+      {showHindiGuide && <HindiGuideModal onClose={() => setShowHindiGuide(false)} />}
     </PageWrapper>
   )
 }
