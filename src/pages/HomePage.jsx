@@ -57,6 +57,7 @@ const LANGS = [
   { key: 'es', label: 'ES' },
   { key: 'fr', label: 'FR' },
   { key: 'de', label: 'DE' },
+  { key: 'hi', label: 'HI' },
 ]
 
 // ── Sub-components ─────────────────────────────────────────────────────────

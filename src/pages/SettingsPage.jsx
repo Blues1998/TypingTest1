@@ -173,7 +173,7 @@ export function SettingsPage() {
           label="language"
           description="language of the typing passages"
         >
-          {['en', 'es', 'fr', 'de'].map(l => (
+          {['en', 'es', 'fr', 'de', 'hi'].map(l => (
             <OptionPill
               key={l}
               label={l.toUpperCase()}

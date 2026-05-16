@@ -177,7 +177,8 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     }, 100)
   }
 
-  function handleInput(newValue) {
+  function handleInput(rawValue) {
+    const newValue = rawValue.normalize('NFC')
     if (phase === 'finished') return
     if (phase === 'idle') startTest()
 

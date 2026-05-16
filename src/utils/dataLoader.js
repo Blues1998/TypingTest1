@@ -7,6 +7,7 @@ export async function loadData() {
     : lang === 'es' ? 'data/sentences_es.json'
     : lang === 'fr' ? 'data/sentences_fr.json'
     : lang === 'de' ? 'data/sentences_de.json'
+    : lang === 'hi' ? 'data/sentences_hi.json'
     : 'data/sentences.json'
 
   const [w, s, l, rs, as, esl, al, el, cs, q] = await Promise.all([

@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Fira+Code:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Fira+Code:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap');
 @import "tailwindcss";
 
 /* ── Font overrides (data-font attribute set by settings) ── */
-[data-font="fira"]   { --font-mono: 'Fira Code',   monospace; }
-[data-font="system"] { --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace; }
+[data-font="fira"]   { --font-mono: 'Fira Code', 'Noto Sans Devanagari', monospace; }
+[data-font="system"] { --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'Noto Sans Devanagari', monospace; }
 
 @theme {
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-mono: 'JetBrains Mono', 'Noto Sans Devanagari', monospace;
 
   --color-bg:           #111111;
   --color-surface:      #1a1a1a;
