@@ -85,7 +85,7 @@ export function TypingPage() {
     phase, elapsed, remaining, results, restartKey,
     liveWpm, progress,
     ghostCaret, ghostWpm,
-    author, wordsTyped,
+    author, hindiRef, wordsTyped,
     handleInput, handleKeyDown, handleKeyUp, restart,
   } = useTypingTest({ mode, data, difficulty, customText, duration, wordCount })
 
@@ -181,6 +181,13 @@ export function TypingPage() {
         {capsLock && (
           <div className="text-center text-xs mb-3" style={{ color: 'var(--color-wrong)' }}>
             caps lock is on
+          </div>
+        )}
+
+        {/* Hindi Devanagari reference */}
+        {hindiRef && phase !== 'finished' && (
+          <div className="mb-3 text-lg leading-loose" style={{ color: 'var(--color-sub)', fontFamily: "'Noto Sans Devanagari', sans-serif", opacity: 0.6 }}>
+            {hindiRef}
           </div>
         )}
 

@@ -16,13 +16,20 @@ function ghostKey(mode, difficulty, textHash) {
 }
 
 function resolveText(passage) {
-  // Quotes mode returns { text, author }; everything else is a plain string
-  if (passage && typeof passage === 'object') return passage.text
+  if (passage && typeof passage === 'object') {
+    if ('roman' in passage) return passage.roman  // Hindi paired {roman, hindi}
+    return passage.text                            // Quotes {text, author}
+  }
   return passage || ''
 }
 
 function resolveAuthor(passage) {
   if (passage && typeof passage === 'object') return passage.author || null
+  return null
+}
+
+function resolveHindi(passage) {
+  if (passage && typeof passage === 'object' && 'hindi' in passage) return passage.hindi
   return null
 }
 
@@ -49,9 +56,11 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
   const initialPassage = pickInitial()
   const initialText = applyMutations(resolveText(initialPassage), mode)
   const initialAuthor = resolveAuthor(initialPassage)
+  const initialHindi = resolveHindi(initialPassage)
 
   const [text, setText]           = useState(() => initialText)
   const [author, setAuthor]       = useState(() => initialAuthor)
+  const [hindiRef, setHindiRef]   = useState(() => initialHindi)
   const [chars, setChars]         = useState(() => buildChars(initialText))
   const [inputValue, setInputValue] = useState('')
   const [caretIndex, setCaretIndex] = useState(0)
@@ -258,6 +267,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     currentPassageRef.current = newPassage
     setText(newText)
     setAuthor(newAuthor)
+    setHindiRef(resolveHindi(newPassage))
     setChars(buildChars(newText))
     setInputValue('')
     setCaretIndex(0)
@@ -291,7 +301,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     phase, elapsed, remaining, results, restartKey,
     liveWpm, progress,
     ghostCaret, ghostWpm,
-    author,
+    author, hindiRef,
     wordsTyped,
     handleInput, handleKeyDown, handleKeyUp, restart,
   }
