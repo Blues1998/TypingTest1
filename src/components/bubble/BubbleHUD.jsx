@@ -1,3 +1,5 @@
+import { BUBBLE_TIERS } from '../../utils/levelSystem.js'
+
 function Shield({ active }) {
   return (
     <span
@@ -25,29 +27,77 @@ function Shield({ active }) {
   )
 }
 
-export function BubbleHUD({ score, strikes, wave, inputRef, onInput, phase, onRestart }) {
+export function BubbleHUD({ score, strikes, wave, inputRef, onInput, phase, onStart, onRestart, difficulty, onDifficultyChange }) {
   return (
-    <div className="w-full max-w-4xl">
-      {/* Stats bar */}
-      <div className="flex items-center justify-between px-1 py-2">
-        <div className="flex items-center gap-5 text-sm">
-          <span className="text-sub">
-            score{' '}
-            <span className="text-main font-semibold tabular-nums">{score}</span>
-          </span>
-          <span className="text-sub">
-            wave{' '}
-            <span className="text-text tabular-nums">{wave}</span>
-          </span>
+    <div className="w-full max-w-6xl">
+
+      {/* Idle start screen */}
+      {phase === 'idle' && (
+        <div className="text-center py-12 flex flex-col items-center gap-6">
+          <div>
+            <h1
+              className="text-4xl font-bold tracking-tight mb-1"
+              style={{ color: 'var(--color-main)', textShadow: '0 0 24px rgba(226,183,20,0.35)' }}
+            >
+              Stellar Drift
+            </h1>
+            <p className="text-sub text-sm tracking-wide">asteroid intercept protocol</p>
+          </div>
+
+          <div className="text-sub text-sm leading-relaxed">
+            <p>Type the word on each asteroid to destroy it.</p>
+            <p>Miss 3 and the planet is lost.</p>
+          </div>
+
+          <div className="flex gap-2">
+            {BUBBLE_TIERS.map(tier => (
+              <button
+                key={tier}
+                onClick={() => onDifficultyChange(tier)}
+                className="px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors duration-100"
+                style={{
+                  background:  difficulty === tier ? 'var(--color-main)' : 'transparent',
+                  color:       difficulty === tier ? 'var(--color-bg)'   : 'var(--color-sub)',
+                  border:      difficulty === tier ? '2px solid var(--color-main)' : '2px solid var(--color-border)',
+                }}
+              >
+                {tier}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={onStart}
+            className="px-10 py-3 rounded-lg font-semibold text-base transition-colors duration-100"
+            style={{ background: 'var(--color-main)', color: 'var(--color-bg)' }}
+          >
+            launch
+          </button>
         </div>
-        {/* Shields */}
-        <div className="flex items-center gap-1">
-          <span className="text-sub text-xs mr-1">shields</span>
-          <Shield active={strikes < 1} />
-          <Shield active={strikes < 2} />
-          <Shield active={strikes < 3} />
+      )}
+
+      {/* Stats bar — visible during running and gameover */}
+      {phase !== 'idle' && (
+        <div className="flex items-center justify-between px-1 py-2">
+          <div className="flex items-center gap-5 text-sm">
+            <span className="text-sub">
+              score{' '}
+              <span className="text-main font-semibold tabular-nums">{score}</span>
+            </span>
+            <span className="text-sub">
+              wave{' '}
+              <span className="text-text tabular-nums">{wave}</span>
+            </span>
+          </div>
+          {/* Shields */}
+          <div className="flex items-center gap-1">
+            <span className="text-sub text-xs mr-1">shields</span>
+            <Shield active={strikes < 1} />
+            <Shield active={strikes < 2} />
+            <Shield active={strikes < 3} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Word input */}
       {phase === 'running' && (

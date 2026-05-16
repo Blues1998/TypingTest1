@@ -84,6 +84,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
+        if (parsed.text !== undefined && parsed.text !== text) return
         ghostReplayRef.current = parsed.replay
         setGhostWpm(parsed.wpm)
       } catch { /* ignore */ }
@@ -136,9 +137,16 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     if (finalWpm > 0) {
       const key = ghostKey(mode, difficulty, hashText(textRef.current))
       const existing = localStorage.getItem(key)
-      const existingWpm = existing ? JSON.parse(existing).wpm : 0
+      const existingWpm = existing ? (JSON.parse(existing).wpm ?? 0) : 0
       if (finalWpm > existingWpm) {
-        localStorage.setItem(key, JSON.stringify({ wpm: finalWpm, replay: replayRef.current }))
+        const mistakes = charsRef.current
+          .slice(0, inputLengthRef.current)
+          .filter(c => c.status !== 'correct')
+          .length
+        localStorage.setItem(key, JSON.stringify({
+          wpm: finalWpm, accuracy: finalAccuracy, timeTaken: finalElapsed,
+          mistakes, text: textRef.current, timestamp: Date.now(), replay: replayRef.current,
+        }))
       }
     }
   }, [mode, difficulty])
@@ -263,6 +271,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
+        if (parsed.text !== undefined && parsed.text !== newText) return
         ghostReplayRef.current = parsed.replay
         setGhostWpm(parsed.wpm)
       } catch { /* ignore */ }

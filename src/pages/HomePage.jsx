@@ -35,7 +35,7 @@ const TYPING_MODES = [
 
 const CHALLENGE_MODES = [
   { key: 'survival', label: 'survival',        desc: 'type words to add time - run out and you die',     icon: '⚡',  path: () => '/survival' },
-  { key: 'ghost',    label: 'ghost race',       desc: 'race against your own best run',                   icon: '👻',  path: () => '/type/stopwatch?ghost=1' },
+  { key: 'ghost',    label: 'ghost race',       desc: 'race against your own best run',                   icon: '👻',  path: () => '/ghost' },
   { key: 'code',     label: 'code snippets',   desc: 'type real code - brackets, indents and all',       icon: '{ }', path: () => '/type/code' },
   { key: 'quotes',   label: 'quotes',           desc: 'type famous quotes from literature and history',   icon: '"',   path: () => '/type/quotes' },
   { key: 'daily',    label: 'daily challenge', desc: 'same text for everyone today - resets at midnight', icon: '★',  path: () => '/type/daily' },
@@ -74,7 +74,7 @@ function DifficultyPills({ mode, tiers }) {
   }
 
   return (
-    <div className="flex items-center gap-1.5 mt-2.5" onClick={e => e.stopPropagation()}>
+    <div className="flex items-center gap-1.5 mt-2.5 flex-wrap" onClick={e => e.stopPropagation()}>
       {tiers.map(tier => (
         <button
           key={tier}
@@ -107,7 +107,7 @@ function DurationPills({ onClick }) {
   }
 
   return (
-    <div className="flex items-center gap-1.5 mt-2" onClick={e => e.stopPropagation()}>
+    <div className="flex items-center gap-1.5 mt-2 flex-wrap" onClick={e => e.stopPropagation()}>
       {DURATIONS.map(d => (
         <button
           key={d}
@@ -136,7 +136,7 @@ function WordCountPills() {
   }
 
   return (
-    <div className="flex items-center gap-1.5 mt-2" onClick={e => e.stopPropagation()}>
+    <div className="flex items-center gap-1.5 mt-2 flex-wrap" onClick={e => e.stopPropagation()}>
       {COUNTS.map(n => (
         <button
           key={n}
@@ -154,21 +154,24 @@ function WordCountPills() {
   )
 }
 
-function ModeTile({ mode, index, showDifficulty, tiers, children, onClick }) {
+function ModeTile({ mode, index, showDifficulty, tiers, children, onClick, badge }) {
   return (
     <motion.button
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.055 }}
       onClick={onClick}
-      className="group flex items-start gap-5 p-5 bg-surface border border-border rounded-xl text-left w-full hover:border-main transition-colors duration-150"
+      className="group flex items-start gap-5 p-5 bg-surface border border-border rounded-xl text-left w-full hover:border-main transition-colors duration-150 h-full"
     >
-      <span className="text-xl w-7 text-center opacity-50 group-hover:opacity-100 transition-opacity mt-0.5 shrink-0">
+      <span className="text-xl w-7 text-center opacity-75 group-hover:opacity-100 transition-opacity mt-0.5 shrink-0">
         {mode.icon}
       </span>
       <div className="flex-1 min-w-0">
-        <div className="text-text font-semibold text-sm group-hover:text-main transition-colors">
-          {mode.label}
+        <div className="flex items-center gap-1.5">
+          <div className="text-text font-semibold text-sm group-hover:text-main transition-colors">
+            {mode.label}
+          </div>
+          {badge}
         </div>
         <div className="text-sub text-xs mt-0.5 leading-snug">{mode.desc}</div>
         {showDifficulty && tiers && (
@@ -187,7 +190,8 @@ function SectionLabel({ children, delay = 0 }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2, delay }}
-      className="text-sub text-xs tracking-widest uppercase mb-2"
+      className="text-sub text-xs tracking-widest uppercase mb-3 pl-2.5"
+      style={{ borderLeft: '2px solid var(--color-main)' }}
     >
       {children}
     </motion.p>
@@ -299,154 +303,184 @@ export function HomePage() {
 
   return (
     <PageWrapper>
-      <div className="max-w-xl mx-auto px-6 py-12">
-        {/* Rank badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="text-center mb-10"
-        >
-          {best ? (
-            <>
-              <span className="text-5xl font-bold tabular-nums" style={{ color: rank.color }}>
-                {best}
-              </span>
-              <span className="text-sub text-sm ml-2">wpm</span>
-              <div className="text-xs mt-1 tracking-widest uppercase font-semibold" style={{ color: rank.color }}>
-                {rank.label}
-              </div>
-              {sessionStats && (
-                <div className="text-sub text-xs mt-2">{sessionStats}</div>
-              )}
-            </>
-          ) : (
-            <div className="text-sub text-sm">complete a test to earn your rank</div>
-          )}
-        </motion.div>
+      <div className="max-w-5xl mx-auto px-4 py-8 lg:px-6 lg:py-12">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
 
-        {/* Global toggles */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2, delay: 0.04 }}
-          className="flex flex-wrap items-center gap-2 mb-5"
-        >
-          <TogglePill label="numbers" storageKey={LS_NUMS} />
-          <TogglePill label="punctuation" storageKey={LS_PUNC} />
-          <div className="ml-auto">
-            <LangPills />
-          </div>
-        </motion.div>
+          {/* ── LEFT SIDEBAR ── */}
+          <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-4">
 
-        {/* Typing modes */}
-        <SectionLabel delay={0.05}>typing modes</SectionLabel>
-        <div className="flex flex-col gap-2.5 mb-8">
-          {TYPING_MODES.map((mode, i) => (
-            <ModeTile
-              key={mode.key}
-              mode={mode}
-              index={i}
-              showDifficulty={mode.key !== 'bubble' ? true : true}
-              tiers={mode.key === 'bubble' ? BUBBLE_TIERS : TYPING_TIERS}
-              onClick={() => navigate(getTypingPath(mode.key))}
+            {/* Rank card */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25 }}
+              className="p-5 bg-surface border border-border rounded-xl"
             >
-              {mode.showDuration && <DurationPills />}
-              {mode.showWordCount && <WordCountPills />}
-            </ModeTile>
-          ))}
-        </div>
-
-        {/* Challenge modes */}
-        <SectionLabel delay={0.2}>challenge modes</SectionLabel>
-        <div className="flex flex-col gap-2.5 mb-8">
-          {CHALLENGE_MODES.map((mode, i) => (
-            <div key={mode.key} className="relative">
-              <ModeTile
-                mode={mode}
-                index={TYPING_MODES.length + i}
-                showDifficulty={false}
-                onClick={() => navigate(mode.path())}
-              />
-              {mode.key === 'daily' && (
-                <div className="absolute top-3 right-10 flex items-center gap-2">
-                  {streak > 0 && (
-                    <span className="text-[10px] text-main font-semibold">
-                      🔥 {streak}
-                    </span>
-                  )}
-                  {doneToday && (
-                    <span className="text-[10px] text-correct font-semibold">done</span>
-                  )}
+              {best ? (
+                <>
+                  <div className="mb-3">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-bold tabular-nums leading-none" style={{ color: rank.color }}>
+                        {best}
+                      </span>
+                      <span className="text-sub text-sm">wpm</span>
+                    </div>
+                    <div className="text-xs mt-1.5 tracking-widest uppercase font-semibold" style={{ color: rank.color }}>
+                      {rank.label}
+                    </div>
+                  </div>
+                  <div className="border-t border-border my-3" />
+                  <div className="flex flex-col gap-1.5">
+                    {sessionStats && (
+                      <div className="text-sub text-xs">{sessionStats}</div>
+                    )}
+                    {streak > 0 && (
+                      <div className="text-sub text-xs flex items-center gap-1">
+                        <span>🔥</span>
+                        <span>{streak} day streak</span>
+                      </div>
+                    )}
+                    {doneToday && (
+                      <div className="text-[10px] font-semibold" style={{ color: 'var(--color-correct)' }}>
+                        daily done ✓
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col gap-2 py-2">
+                  <div className="text-sub text-sm">complete a test to earn your rank</div>
+                  <div className="text-sub text-[10px] opacity-60">your best wpm and badge will appear here</div>
                 </div>
               )}
-            </div>
-          ))}
-        </div>
+            </motion.div>
 
-        {/* Text options */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.35 }}
-          className="space-y-3"
-        >
-          {stdSentences.length > 0 && (
-            <div>
-              <p className="text-sub text-xs mb-2">or pick a specific text</p>
-              <div className="flex gap-2">
-                <select
-                  value={selectedSentence}
-                  onChange={e => setSelectedSentence(e.target.value)}
-                  className="flex-1 bg-surface border border-border rounded-lg px-3 py-2 text-text text-xs focus:outline-none focus:border-main transition-colors"
-                >
-                  <option value="">- random -</option>
-                  {stdSentences.map((s, i) => (
-                    <option key={i} value={s}>
-                      {s.length > 60 ? s.slice(0, 60) + '...' : s}
-                    </option>
-                  ))}
-                </select>
-                {selectedSentence && (
-                  <button
-                    onClick={() => navigate(`/type/stopwatch?text=${encodeURIComponent(selectedSentence)}`)}
-                    className="px-4 py-2 bg-main text-bg rounded-lg text-xs font-semibold hover:bg-main transition-colors"
-                  >
-                    start
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <button
-              onClick={() => setShowCustom(v => !v)}
-              className="text-xs text-sub hover:text-text transition-colors"
+            {/* Text options card */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2, delay: 0.08 }}
+              className="p-5 bg-surface border border-border rounded-xl flex flex-col gap-4"
             >
-              {showCustom ? '- cancel' : '+ type your own text'}
-            </button>
-            {showCustom && (
-              <div className="mt-2 flex flex-col gap-2">
-                <textarea
-                  value={customText}
-                  onChange={e => setCustomText(e.target.value)}
-                  placeholder="paste any text here to type it..."
-                  rows={3}
-                  className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-text text-xs font-mono focus:outline-none focus:border-main transition-colors resize-none"
-                />
-                {customText.trim().length > 5 && (
-                  <button
-                    onClick={() => navigate(`/type/stopwatch?text=${encodeURIComponent(customText.trim())}`)}
-                    className="self-start px-4 py-2 bg-main text-bg rounded-lg text-xs font-semibold hover:bg-main transition-colors"
-                  >
-                    start typing
-                  </button>
+              <div>
+                <SectionLabel>text options</SectionLabel>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <TogglePill label="numbers"     storageKey={LS_NUMS} />
+                  <TogglePill label="punctuation" storageKey={LS_PUNC} />
+                </div>
+              </div>
+
+              <LangPills />
+
+              {stdSentences.length > 0 && (
+                <>
+                  <div className="border-t border-border" />
+                  <div>
+                    <p className="text-sub text-[10px] mb-2">pick a specific text</p>
+                    <div className="flex flex-col gap-2">
+                      <select
+                        value={selectedSentence}
+                        onChange={e => setSelectedSentence(e.target.value)}
+                        className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-text text-xs focus:outline-none focus:border-main transition-colors"
+                      >
+                        <option value="">- random -</option>
+                        {stdSentences.map((s, i) => (
+                          <option key={i} value={s}>
+                            {s.length > 50 ? s.slice(0, 50) + '...' : s}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedSentence && (
+                        <button
+                          onClick={() => navigate(`/type/stopwatch?text=${encodeURIComponent(selectedSentence)}`)}
+                          className="w-full px-4 py-2 bg-main text-bg rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          start
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <button
+                  onClick={() => setShowCustom(v => !v)}
+                  className="text-xs text-sub hover:text-text transition-colors"
+                >
+                  {showCustom ? '- cancel' : '+ custom text'}
+                </button>
+                {showCustom && (
+                  <div className="mt-2 flex flex-col gap-2">
+                    <textarea
+                      value={customText}
+                      onChange={e => setCustomText(e.target.value)}
+                      placeholder="paste any text here to type it..."
+                      rows={3}
+                      className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-text text-xs font-mono focus:outline-none focus:border-main transition-colors resize-none"
+                    />
+                    {customText.trim().length > 5 && (
+                      <button
+                        onClick={() => navigate(`/type/stopwatch?text=${encodeURIComponent(customText.trim())}`)}
+                        className="self-start px-4 py-2 bg-main text-bg rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        start typing
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        </motion.div>
+            </motion.div>
+
+          </aside>
+
+          {/* ── RIGHT MAIN ── */}
+          <main className="flex-1 min-w-0 flex flex-col gap-6">
+
+            {/* Typing modes */}
+            <section>
+              <SectionLabel delay={0.05}>typing modes</SectionLabel>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {TYPING_MODES.map((mode, i) => (
+                  <ModeTile
+                    key={mode.key}
+                    mode={mode}
+                    index={i}
+                    showDifficulty
+                    tiers={mode.key === 'bubble' ? BUBBLE_TIERS : TYPING_TIERS}
+                    onClick={() => navigate(getTypingPath(mode.key))}
+                  >
+                    {mode.showDuration && <DurationPills />}
+                    {mode.showWordCount && <WordCountPills />}
+                  </ModeTile>
+                ))}
+              </div>
+            </section>
+
+            {/* Challenge modes */}
+            <section>
+              <SectionLabel delay={0.18}>challenge modes</SectionLabel>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {CHALLENGE_MODES.map((mode, i) => (
+                  <div key={mode.key} className={mode.key === 'daily' ? 'sm:col-span-2' : ''}>
+                    <ModeTile
+                      mode={mode}
+                      index={TYPING_MODES.length + i}
+                      showDifficulty={false}
+                      onClick={() => navigate(mode.path())}
+                      badge={mode.key === 'daily' && streak > 0
+                        ? <span className="text-[10px] text-main font-semibold">🔥 {streak}</span>
+                        : null
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+          </main>
+
+        </div>
       </div>
     </PageWrapper>
   )

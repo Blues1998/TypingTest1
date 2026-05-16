@@ -14,6 +14,7 @@ import { HistoryPage } from './pages/HistoryPage.jsx'
 import { AchievementsPage } from './pages/AchievementsPage.jsx'
 import { SettingsPage } from './pages/SettingsPage.jsx'
 import { AchievementToast } from './components/AchievementToast.jsx'
+import { GhostLobbyPage } from './pages/GhostLobbyPage.jsx'
 
 export const DataContext = createContext(null)
 
@@ -37,6 +38,7 @@ function AnimatedRoutes() {
         <Route path="/history"       element={<HistoryPage />} />
         <Route path="/achievements"  element={<AchievementsPage />} />
         <Route path="/settings"      element={<SettingsPage />} />
+        <Route path="/ghost"         element={<GhostLobbyPage />} />
       </Routes>
     </AnimatePresence>
   )
