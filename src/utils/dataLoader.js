@@ -9,7 +9,7 @@ export async function loadData() {
     : lang === 'de' ? 'data/sentences_de.json'
     : 'data/sentences.json'
 
-  const [w, s, l, rs, as, es, al, el, cs, q] = await Promise.all([
+  const [w, s, l, rs, as, esl, al, el, cs, q] = await Promise.all([
     get('data/words.json'),
     get(langFile),
     get('data/long_texts.json'),
@@ -22,18 +22,29 @@ export async function loadData() {
     get('data/quotes.json'),
   ])
 
+  const nonEn = lang !== 'en'
+  const langSents = s.sentences
+
+  // For non-English, concatenate sentences into longer passages for countdown mode
+  function buildLongTexts(count = 12, perText = 5) {
+    return Array.from({ length: count }, () => {
+      const shuffled = [...langSents].sort(() => Math.random() - 0.5)
+      return shuffled.slice(0, Math.min(perText, langSents.length)).join(' ')
+    })
+  }
+
   return {
     words: w.words,
     sentences: {
-      rookie:   rs.sentences,
-      standard: s.sentences,
-      advanced: as.sentences,
-      elite:    es.sentences,
+      rookie:   nonEn ? langSents : rs.sentences,
+      standard: langSents,
+      advanced: nonEn ? langSents : as.sentences,
+      elite:    nonEn ? langSents : esl.sentences,
     },
     longTexts: {
-      standard: l.texts,
-      advanced: al.texts,
-      elite:    el.texts,
+      standard: nonEn ? buildLongTexts() : l.texts,
+      advanced: nonEn ? buildLongTexts() : al.texts,
+      elite:    nonEn ? buildLongTexts() : el.texts,
     },
     codeSnippets: cs.snippets,
     quotes: q.quotes,
