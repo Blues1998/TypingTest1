@@ -10,31 +10,22 @@ import { useTypingTest } from '../hooks/useTypingTest.js'
 import { useSound } from '../hooks/useSound.js'
 import { getDifficulty } from '../utils/levelSystem.js'
 
-const HINDI_VOWELS = [
-  ['a','अ'],['aa','आ'],['i','इ'],['ee','ई'],
-  ['u','उ'],['oo','ऊ'],['e','ए'],['ai','ऐ'],
-  ['o','ओ'],['au','औ'],
+const HINDI_PHONETIC_GUIDE = [
+  { spelling: 'aa', sound: 'long a', example: 'baazaar' },
+  { spelling: 'ee', sound: 'long i', example: 'meetha' },
+  { spelling: 'oo', sound: 'long u', example: 'doodh' },
+  { spelling: 'ai', sound: 'ai / ay', example: 'main' },
+  { spelling: 'au', sound: 'ow', example: 'mausam' },
+  { spelling: 'kh', sound: 'aspirated k', example: 'khaana' },
+  { spelling: 'gh', sound: 'aspirated g', example: 'ghar' },
+  { spelling: 'ch', sound: 'ch', example: 'achha' },
+  { spelling: 'jh', sound: 'aspirated j', example: 'jhaad' },
+  { spelling: 'th', sound: 'aspirated t', example: 'thanda' },
+  { spelling: 'dh', sound: 'aspirated d', example: 'dhodh' },
+  { spelling: 'bh', sound: 'aspirated b', example: 'bheed' },
+  { spelling: 'sh', sound: 'sh', example: 'sheher' },
+  { spelling: 'woh', sound: 'he / she', example: 'woh jaata' },
 ]
-const HINDI_CONSONANTS = [
-  ['k','क'],['kh','ख'],['g','ग'],['gh','घ'],
-  ['ch','च'],['chh','छ'],['j','ज'],['jh','झ'],
-  ['t','त'],['th','थ'],['d','द'],['dh','ध'],
-  ['n','न'],['p','प'],['ph/f','फ'],['b','ब'],
-  ['bh','भ'],['m','म'],['y','य'],['r','र'],
-  ['l','ल'],['v/w','व'],['sh','श'],['s','स'],
-  ['h','ह'],['T','ट'],['Th','ठ'],['D','ड'],
-  ['Dh','ढ'],['N','ण'],['Sh','ष'],['ng','ं'],
-]
-
-function MapEntry({ lat, dev }) {
-  return (
-    <div className="flex items-center gap-1.5 rounded-lg px-2 py-1.5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-      <span className="font-mono text-xs font-semibold" style={{ color: 'var(--color-main)' }}>{lat}</span>
-      <span className="text-[10px]" style={{ color: 'var(--color-sub)' }}>→</span>
-      <span className="text-sm" style={{ color: 'var(--color-text)', fontFamily: "'Noto Sans Devanagari', sans-serif" }}>{dev}</span>
-    </div>
-  )
-}
 
 function HindiGuideModal({ onClose }) {
   return (
@@ -45,38 +36,34 @@ function HindiGuideModal({ onClose }) {
     >
       <div
         className="rounded-xl p-6 w-full mx-4 max-h-[85vh] overflow-y-auto"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', maxWidth: '520px' }}
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', maxWidth: '480px' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-base" style={{ color: 'var(--color-text)' }}>Hindi transliteration guide</h2>
+          <h2 className="font-bold text-base" style={{ color: 'var(--color-text)' }}>Hindi phonetic mode</h2>
           <button onClick={onClose} className="text-xl leading-none transition-colors" style={{ color: 'var(--color-sub)' }}>×</button>
         </div>
 
         <p className="text-xs leading-relaxed mb-5" style={{ color: 'var(--color-sub)' }}>
-          Enable <span style={{ color: 'var(--color-text)' }}>Hindi – Transliteration</span> in your OS keyboard settings
-          (macOS: System Settings → Keyboard → Input Sources) or install{' '}
-          <span style={{ color: 'var(--color-text)' }}>Google Input Tools</span> in Chrome.
-          Type the Latin sequence — your IME converts it to Devanagari automatically.
+          Sentences are written in <span style={{ color: 'var(--color-text)' }}>phonetic Roman script</span> — type exactly what you see using your regular keyboard.
+          No special keyboard or IME needed.
         </p>
 
-        <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: 'var(--color-sub)', borderLeft: '2px solid var(--color-main)', paddingLeft: '8px' }}>
-          vowels · स्वर
+        <p className="text-[10px] uppercase tracking-widest mb-3" style={{ color: 'var(--color-sub)', borderLeft: '2px solid var(--color-main)', paddingLeft: '8px' }}>
+          spelling conventions
         </p>
-        <div className="grid grid-cols-5 gap-1.5 mb-5">
-          {HINDI_VOWELS.map(([lat, dev]) => <MapEntry key={lat} lat={lat} dev={dev} />)}
-        </div>
-
-        <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: 'var(--color-sub)', borderLeft: '2px solid var(--color-main)', paddingLeft: '8px' }}>
-          consonants · व्यंजन
-        </p>
-        <div className="grid grid-cols-4 gap-1.5 mb-4">
-          {HINDI_CONSONANTS.map(([lat, dev]) => <MapEntry key={lat} lat={lat} dev={dev} />)}
+        <div className="flex flex-col gap-1.5 mb-5">
+          {HINDI_PHONETIC_GUIDE.map(({ spelling, sound, example }) => (
+            <div key={spelling} className="flex items-center gap-3 text-xs">
+              <span className="font-mono font-semibold w-10 shrink-0" style={{ color: 'var(--color-main)' }}>{spelling}</span>
+              <span className="w-24 shrink-0" style={{ color: 'var(--color-text)' }}>{sound}</span>
+              <span style={{ color: 'var(--color-sub)' }}>e.g. <span className="font-mono">{example}</span></span>
+            </div>
+          ))}
         </div>
 
         <p className="text-[10px] leading-relaxed" style={{ color: 'var(--color-sub)' }}>
-          Capital <span className="font-mono" style={{ color: 'var(--color-text)' }}>T Th D Dh N</span> = retroflex consonants ·
-          vowels attach to the preceding consonant automatically · double a consonant letter to add a halant (्)
+          Double letters (e.g. <span className="font-mono" style={{ color: 'var(--color-text)' }}>bacche, achha</span>) indicate a short, clipped consonant sound. Hyphens are typed as-is.
         </p>
       </div>
     </div>
