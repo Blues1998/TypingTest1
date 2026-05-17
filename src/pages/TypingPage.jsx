@@ -70,6 +70,47 @@ function HindiGuideModal({ onClose }) {
   )
 }
 
+function HindiWordDisplay({ text, chars, hindiText, caretIndex }) {
+  const romanParts = text.split(/([ ]+)/)
+  const hindiParts = hindiText.split(/([ ]+)/)
+
+  let pos = 0
+  const wordRanges = romanParts.map(part => {
+    const start = pos
+    pos += part.length
+    return { start, end: pos }
+  })
+
+  return (
+    <p className="text-xl leading-loose break-words" style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}>
+      {hindiParts.map((part, i) => {
+        const { start, end } = wordRanges[i] || { start: 0, end: 0 }
+        const isSpace = part === ' '
+        let status = 'pending'
+        if (end <= caretIndex) {
+          status = chars.slice(start, end).every(c => c.status === 'correct') ? 'correct' : 'wrong'
+        } else if (start < caretIndex) {
+          status = 'typing'
+        }
+        return (
+          <span
+            key={i}
+            style={{
+              color: status === 'correct' ? 'var(--color-correct)'
+                : status === 'wrong'   ? 'var(--color-wrong)'
+                : status === 'typing'  ? 'var(--color-text)'
+                : 'var(--color-sub)',
+              borderBottom: status === 'typing' && !isSpace ? '2px solid var(--color-main)' : undefined,
+            }}
+          >
+            {part}
+          </span>
+        )
+      })}
+    </p>
+  )
+}
+
 export function TypingPage() {
   const { mode } = useParams()
   const [searchParams] = useSearchParams()
@@ -184,13 +225,6 @@ export function TypingPage() {
           </div>
         )}
 
-        {/* Hindi Devanagari reference */}
-        {hindiRef && phase !== 'finished' && (
-          <div className="mb-3 text-lg leading-loose" style={{ color: 'var(--color-sub)', fontFamily: "'Noto Sans Devanagari', sans-serif", opacity: 0.6 }}>
-            {hindiRef}
-          </div>
-        )}
-
         {/* Typing area */}
         <div className="relative">
           <div className="absolute -top-5 right-0 flex items-center gap-3">
@@ -208,7 +242,11 @@ export function TypingPage() {
           </div>
 
           <motion.div animate={shakeControls}>
-            <CharDisplay chars={chars} caretIndex={caretIndex} ghostCaretIndex={ghostCaret} caretStyle={caretStyle} />
+            {hindiRef ? (
+              <HindiWordDisplay text={text} chars={chars} hindiText={hindiRef} caretIndex={caretIndex} />
+            ) : (
+              <CharDisplay chars={chars} caretIndex={caretIndex} ghostCaretIndex={ghostCaret} caretStyle={caretStyle} />
+            )}
           </motion.div>
 
           {/* Quote author attribution */}
