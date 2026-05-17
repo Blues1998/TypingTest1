@@ -285,7 +285,9 @@ export function HomePage() {
   const streak = getDailyStreak()
   const doneToday = hasDoneToday()
 
-  const stdSentences = sentences?.standard || []
+  const stdSentences = (sentences?.standard || []).map(s =>
+    s && typeof s === 'object' ? (s.roman || '') : (s || '')
+  )
 
   function getTypingPath(modeKey) {
     if (modeKey === 'countdown') {

@@ -33,11 +33,17 @@ export async function loadData() {
   const nonEn = lang !== 'en'
   const langSents = s.sentences || []
 
+  const toRoman = item => (item && typeof item === 'object') ? (item.roman || '') : (item || '')
+  const toHindi = item => (item && typeof item === 'object') ? (item.hindi || '') : ''
+
   // For non-English, concatenate sentences into longer passages for countdown mode
   function buildLongTexts(count = 12, perText = 5) {
     return Array.from({ length: count }, () => {
       const shuffled = [...langSents].sort(() => Math.random() - 0.5)
-      return shuffled.slice(0, Math.min(perText, langSents.length)).join(' ')
+      const selected = shuffled.slice(0, Math.min(perText, langSents.length))
+      const roman = selected.map(toRoman).join(' ')
+      const hindi = selected.map(toHindi).filter(Boolean).join(' ')
+      return hindi ? { roman, hindi } : roman
     })
   }
 
@@ -91,8 +97,8 @@ export function pickPassage(mode, difficulty = 'standard', data, exclude = null,
     while (words.length < n + 5 && attempts < 30) {
       const sentence = randomFrom(pool)
       if (sentence) {
-        // Strip trailing punctuation from sentence before splitting
-        const clean = sentence.replace(/[.!?]+$/, '')
+        const raw = (sentence && typeof sentence === 'object') ? (sentence.roman || '') : sentence
+        const clean = raw.replace(/[.!?।]+$/, '')
         words.push(...clean.split(/\s+/).filter(Boolean))
       }
       attempts++
