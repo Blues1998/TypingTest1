@@ -413,7 +413,6 @@ export function useBubbleGame({ canvasRef, words = [], difficulty = 'pilot', onD
     // RAF is already running (background animation from idle)
     spawnTimerRef.current = setTimeout(spawnAsteroid, 700)
     // shootTimerRef already running from idle — leave it alone
-    inputRef.current?.focus()
   }
 
   // ── Main RAF loop ─────────────────────────────────────────────────────
@@ -557,7 +556,6 @@ export function useBubbleGame({ canvasRef, words = [], difficulty = 'pilot', onD
     rafRef.current        = requestAnimationFrame(gameLoopRef.current)
     spawnTimerRef.current = setTimeout(spawnAsteroid, 700)
     shootTimerRef.current = setTimeout(spawnShootingStar, rand(2000, 5000))
-    inputRef.current?.focus()
   }
 
   return { score, strikes, wave, phase, inputRef, handleWordInput, start, restart, CANVAS_W, CANVAS_H }

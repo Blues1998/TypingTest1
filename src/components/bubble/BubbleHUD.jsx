@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BUBBLE_TIERS } from '../../utils/levelSystem.js'
 
 function Shield({ active }) {
@@ -28,6 +29,10 @@ function Shield({ active }) {
 }
 
 export function BubbleHUD({ score, strikes, wave, inputRef, onInput, phase, onStart, onRestart, difficulty, onDifficultyChange }) {
+  useEffect(() => {
+    if (phase === 'running') inputRef.current?.focus()
+  }, [phase])
+
   return (
     <div className="w-full max-w-6xl">
 
