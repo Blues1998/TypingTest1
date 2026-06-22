@@ -27,6 +27,7 @@ export function NavBar() {
             <Link
               key={to}
               to={to}
+              aria-current={active ? 'page' : undefined}
               className="relative pb-0.5 transition-colors duration-150"
               style={{ color: active ? 'var(--color-text)' : 'var(--color-sub)' }}
             >

@@ -68,7 +68,7 @@ function TierSection({ tier, achievements, unlocked, startIndex }) {
   return (
     <div className="mb-12">
       {/* Section header */}
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-3">
         <div
           className="h-px flex-1 rounded-full"
           style={{ background: `linear-gradient(to right, ${meta.color}, transparent)` }}
@@ -84,6 +84,17 @@ function TierSection({ tier, achievements, unlocked, startIndex }) {
         <div
           className="h-px flex-1 rounded-full"
           style={{ background: `linear-gradient(to left, ${meta.color}, transparent)` }}
+        />
+      </div>
+
+      {/* Per-tier progress bar */}
+      <div className="h-0.5 rounded-full bg-border mb-4 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{
+            width: `${achievements.length > 0 ? (tierUnlocked / achievements.length) * 100 : 0}%`,
+            background: meta.color,
+          }}
         />
       </div>
 
@@ -144,11 +155,11 @@ export function AchievementsPage() {
           </div>
         </motion.div>
 
-        {/* Diamond first, then gold → silver → bronze */}
-        <TierSection tier="diamond" achievements={byTier.diamond} unlocked={unlocked} startIndex={0} />
-        <TierSection tier="gold"    achievements={byTier.gold}    unlocked={unlocked} startIndex={1} />
-        <TierSection tier="silver"  achievements={byTier.silver}  unlocked={unlocked} startIndex={8} />
-        <TierSection tier="bronze"  achievements={byTier.bronze}  unlocked={unlocked} startIndex={16} />
+        {/* Bronze → silver → gold → diamond (ascending progression) */}
+        <TierSection tier="bronze"  achievements={byTier.bronze}  unlocked={unlocked} startIndex={0} />
+        <TierSection tier="silver"  achievements={byTier.silver}  unlocked={unlocked} startIndex={10} />
+        <TierSection tier="gold"    achievements={byTier.gold}    unlocked={unlocked} startIndex={18} />
+        <TierSection tier="diamond" achievements={byTier.diamond} unlocked={unlocked} startIndex={24} />
       </div>
     </PageWrapper>
   )

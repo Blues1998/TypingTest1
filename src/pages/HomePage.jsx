@@ -348,6 +348,11 @@ export function HomePage() {
                         daily done ✓
                       </div>
                     )}
+                    {!doneToday && streak > 0 && (
+                      <div className="text-[10px]" style={{ color: 'var(--color-main)' }}>
+                        keep your streak — do today's daily →
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (

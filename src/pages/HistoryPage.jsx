@@ -92,6 +92,7 @@ export function HistoryPage() {
   const [activeMode,      setActiveMode]      = useState(null)
   const [activeTimeframe, setActiveTimeframe] = useState('all')
   const [tick,            setTick]            = useState(0)
+  const [confirmClear,    setConfirmClear]    = useState(false)
 
   const activeDays = TIMEFRAMES.find(t => t.key === activeTimeframe)?.days ?? null
   const periodLabel = activeTimeframe === 'all' ? 'all-time' : activeTimeframe
@@ -104,10 +105,10 @@ export function HistoryPage() {
   const aggregateKeys  = getAggregateKeyStats()
 
   function handleClear() {
-    if (window.confirm('Clear all personal history?')) {
-      clearPersonalScores()
-      setTick(t => t + 1)
-    }
+    if (!confirmClear) { setConfirmClear(true); return }
+    clearPersonalScores()
+    setConfirmClear(false)
+    setTick(t => t + 1)
   }
 
   return (
@@ -116,12 +117,24 @@ export function HistoryPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-text text-2xl font-semibold">history</h1>
           {allData.length > 0 && (
-            <button
-              onClick={handleClear}
-              className="text-xs text-sub hover:text-wrong transition-colors"
-            >
-              clear all
-            </button>
+            <div className="flex items-center gap-2">
+              {confirmClear && (
+                <button
+                  onClick={() => setConfirmClear(false)}
+                  className="text-xs text-sub hover:text-text transition-colors"
+                >
+                  cancel
+                </button>
+              )}
+              <button
+                onClick={handleClear}
+                className="text-xs transition-colors"
+                style={{ color: confirmClear ? 'var(--color-wrong)' : 'var(--color-sub)' }}
+                onMouseLeave={() => setConfirmClear(false)}
+              >
+                {confirmClear ? 'sure?' : 'clear all'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -166,6 +179,16 @@ export function HistoryPage() {
           </div>
         )}
 
+        {data.length === 0 && allData.length > 0 && (
+          <div className="text-center py-12 text-sub text-sm">
+            no tests in this period
+          </div>
+        )}
+        {allData.length === 0 && (
+          <div className="text-center py-12 text-sub text-sm">
+            no history yet — complete a test to see it here
+          </div>
+        )}
         <HistoryTable data={data} key={tick} />
 
         {/* All-time per-key accuracy heatmap */}
