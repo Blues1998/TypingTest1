@@ -134,8 +134,8 @@ export function TypingPage() {
   const shakeControls = useAnimation()
   const [capsLock, setCapsLock] = useState(false)
   const [showHindiGuide, setShowHindiGuide] = useState(false)
-  const caretStyle = localStorage.getItem('typingtest_caret_style') || 'line'
-  const lang = localStorage.getItem('typingtest_lang') || 'en'
+  const [caretStyle] = useState(() => localStorage.getItem('typingtest_caret_style') || 'line')
+  const [lang] = useState(() => localStorage.getItem('typingtest_lang') || 'en')
 
   function onInputChange(e) {
     const newVal = e.target.value
@@ -212,7 +212,7 @@ export function TypingPage() {
         />
 
         {/* Progress bar */}
-        <div className="w-full h-px bg-[#222222] mb-6 rounded-full overflow-hidden">
+        <div className="w-full h-1 bg-[#222222] mb-6 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full"
             style={{ width: `${progress * 100}%`, background: 'var(--color-border)', transition: 'width 0.05s linear' }}

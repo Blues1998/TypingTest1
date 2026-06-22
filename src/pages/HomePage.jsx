@@ -10,8 +10,10 @@ import {
   setDifficulty,
   TYPING_TIERS,
   BUBBLE_TIERS,
+  SUPPORTED_LANGS,
 } from '../utils/levelSystem.js'
 import { getDailyStreak, hasDoneToday } from '../utils/streakUtils.js'
+import { TogglePill } from '../components/ui/TogglePill.jsx'
 
 // ── Storage helpers ────────────────────────────────────────────────────────
 
@@ -52,14 +54,6 @@ const TIER_TOOLTIPS = {
   admiral:   '90+ WPM · long words, very fast',
 }
 
-const LANGS = [
-  { key: 'en', label: 'EN' },
-  { key: 'es', label: 'ES' },
-  { key: 'fr', label: 'FR' },
-  { key: 'de', label: 'DE' },
-  { key: 'hi', label: 'HI' },
-]
-
 // ── Sub-components ─────────────────────────────────────────────────────────
 
 function DifficultyPills({ mode, tiers }) {
@@ -97,7 +91,7 @@ function DifficultyPills({ mode, tiers }) {
   )
 }
 
-function DurationPills({ onClick }) {
+function DurationPills() {
   const [active, setActive] = useState(getCountdownDur)
   const DURATIONS = [15, 30, 60, 120]
 
@@ -199,30 +193,6 @@ function SectionLabel({ children, delay = 0 }) {
   )
 }
 
-function TogglePill({ label, storageKey }) {
-  const [active, setActive] = useState(() => localStorage.getItem(storageKey) === 'true')
-
-  function toggle(e) {
-    e.stopPropagation()
-    const next = !active
-    setActive(next)
-    localStorage.setItem(storageKey, String(next))
-  }
-
-  return (
-    <button
-      onClick={toggle}
-      className="text-[11px] px-3 py-1 rounded-full border transition-colors duration-100"
-      style={{
-        borderColor: active ? 'var(--color-main)' : 'var(--color-border)',
-        color:       active ? 'var(--color-main)' : 'var(--color-sub)',
-        background:  active ? 'color-mix(in srgb, var(--color-main) 10%, transparent)' : 'transparent',
-      }}
-    >
-      {label}
-    </button>
-  )
-}
 
 function LangPills() {
   const [active, setActive] = useState(() => localStorage.getItem(LS_LANG) || 'en')
@@ -238,7 +208,7 @@ function LangPills() {
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-sub text-[11px] mr-1">lang</span>
-      {LANGS.map(l => (
+      {SUPPORTED_LANGS.map(l => (
         <button
           key={l.key}
           onClick={e => pick(e, l.key)}
@@ -346,6 +316,11 @@ export function HomePage() {
                     {doneToday && (
                       <div className="text-[10px] font-semibold" style={{ color: 'var(--color-correct)' }}>
                         daily done ✓
+                      </div>
+                    )}
+                    {!doneToday && streak > 0 && (
+                      <div className="text-[10px]" style={{ color: 'var(--color-main)' }}>
+                        keep your streak — do today's daily →
                       </div>
                     )}
                   </div>

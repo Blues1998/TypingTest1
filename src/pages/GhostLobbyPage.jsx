@@ -173,7 +173,7 @@ export function GhostLobbyPage() {
                   run={run}
                   isExpanded={selectedKey === run.key}
                   onToggle={() => toggle(run.key)}
-                  onStart={() => navigate('/type/stopwatch?text=' + encodeURIComponent(run.text))}
+                  onStart={() => navigate(`/type/stopwatch?text=${encodeURIComponent(run.text)}&difficulty=${encodeURIComponent(run.difficulty || 'standard')}`)}
                 />
               ))}
             </div>

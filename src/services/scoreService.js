@@ -2,12 +2,20 @@ import { supabase } from './supabase.js'
 
 const LS_KEY = 'typingtest_scores'
 
+function safeParseScores() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
 // ── Personal (localStorage) ────────────────────────────────────────────────
 
 export function savePersonalScore({ wpm, accuracy, timeTaken, mode, difficulty = null, consistency = null, keyStats = null }) {
-  const all = JSON.parse(localStorage.getItem(LS_KEY) || '[]')
+  const all = safeParseScores()
   all.push({ wpm, accuracy, timeTaken, mode, difficulty, consistency, keyStats, timestamp: Date.now() })
-  localStorage.setItem(LS_KEY, JSON.stringify(all.slice(-200)))
+  try { localStorage.setItem(LS_KEY, JSON.stringify(all.slice(-200))) } catch { /* quota exceeded — skip */ }
 }
 
 export function getAggregateKeyStats() {
@@ -30,7 +38,7 @@ export function getAggregateKeyStats() {
 }
 
 export function getPersonalScores(mode = null) {
-  const all = JSON.parse(localStorage.getItem(LS_KEY) || '[]')
+  const all = safeParseScores()
   return mode ? all.filter(s => s.mode === mode) : all
 }
 

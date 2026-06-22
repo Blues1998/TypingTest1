@@ -33,11 +33,16 @@ function resolveHindi(passage) {
   return null
 }
 
-function applyMutations(rawText, mode) {
+function readMutationFlags() {
+  return {
+    numbers:     localStorage.getItem('typingtest_numbers')     === 'true',
+    punctuation: localStorage.getItem('typingtest_punctuation') === 'true',
+  }
+}
+
+function applyMutations(rawText, mode, flags) {
   if (mode === 'code' || mode === 'daily' || mode === 'quotes') return rawText
-  const numbers = localStorage.getItem('typingtest_numbers') === 'true'
-  const punctuation = localStorage.getItem('typingtest_punctuation') === 'true'
-  return mutateText(rawText, { numbers, punctuation })
+  return mutateText(rawText, flags)
 }
 
 export function useTypingTest({ mode, data, difficulty = 'standard', customText, enableGhost = false, duration = 60, wordCount = 0 }) {
@@ -54,7 +59,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const initialPassage = pickInitial()
-  const initialText = applyMutations(resolveText(initialPassage), mode)
+  const initialText = applyMutations(resolveText(initialPassage), mode, mutationFlagsRef.current)
   const initialAuthor = resolveAuthor(initialPassage)
   const initialHindi = resolveHindi(initialPassage)
 
@@ -71,6 +76,8 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
   const [ghostCaret, setGhostCaret] = useState(null)
   const [ghostWpm, setGhostWpm]   = useState(null)
   const [wordsTyped, setWordsTyped] = useState(0)
+
+  const mutationFlagsRef = useRef(readMutationFlags())
 
   const startTimeRef    = useRef(null)
   const timerRef        = useRef(null)
@@ -146,7 +153,8 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     if (finalWpm > 0) {
       const key = ghostKey(mode, difficulty, hashText(textRef.current))
       const existing = localStorage.getItem(key)
-      const existingWpm = existing ? (JSON.parse(existing).wpm ?? 0) : 0
+      let existingWpm = 0
+      try { existingWpm = existing ? (JSON.parse(existing).wpm ?? 0) : 0 } catch { /* ignore */ }
       if (finalWpm > existingWpm) {
         const mistakes = charsRef.current
           .slice(0, inputLengthRef.current)
@@ -260,7 +268,8 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
       newPassage = pickPassage(mode, difficulty, { sentences, longTexts, codeSnippets, quotes }, prevRaw, wordCount)
     }
 
-    const newText = applyMutations(resolveText(newPassage), mode)
+    mutationFlagsRef.current = readMutationFlags()
+    const newText = applyMutations(resolveText(newPassage), mode, mutationFlagsRef.current)
     const newAuthor = resolveAuthor(newPassage)
 
     textRef.current = newText

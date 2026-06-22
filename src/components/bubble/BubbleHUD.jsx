@@ -1,6 +1,15 @@
 import { useEffect } from 'react'
 import { BUBBLE_TIERS } from '../../utils/levelSystem.js'
 
+function useEscapeRestart(onRestart, phase) {
+  useEffect(() => {
+    if (phase !== 'running') return
+    function onKey(e) { if (e.key === 'Escape') onRestart() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [phase, onRestart])
+}
+
 function Shield({ active }) {
   return (
     <span
@@ -32,6 +41,8 @@ export function BubbleHUD({ score, strikes, wave, inputRef, onInput, phase, onSt
   useEffect(() => {
     if (phase === 'running') inputRef.current?.focus()
   }, [phase])
+
+  useEscapeRestart(onRestart, phase)
 
   return (
     <div className="w-full max-w-6xl">
@@ -93,6 +104,9 @@ export function BubbleHUD({ score, strikes, wave, inputRef, onInput, phase, onSt
               wave{' '}
               <span className="text-text tabular-nums">{wave}</span>
             </span>
+            {phase === 'running' && (
+              <span className="text-sub text-xs">esc to restart</span>
+            )}
           </div>
           {/* Shields */}
           <div className="flex items-center gap-1">

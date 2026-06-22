@@ -1,3 +1,7 @@
+const _langCache = new Map()
+
+export const toRoman = item => (item && typeof item === 'object') ? (item.roman || '') : (item || '')
+
 export async function loadData() {
   const base = import.meta.env.BASE_URL
   const get = path => fetch(`${base}${path}`).then(r => r.json())
@@ -10,12 +14,24 @@ export async function loadData() {
     : lang === 'hi' ? 'data/sentences_hi.json'
     : 'data/sentences.json'
 
-  // Language file: fall back to English if the file is missing or unparseable
-  const langFetch = lang === 'en'
-    ? get(langFile)
-    : fetch(`${base}${langFile}`)
-        .then(r => (r.ok ? r.json() : get('data/sentences.json')))
-        .catch(() => get('data/sentences.json'))
+  // Language file: fall back to English if the file is missing or unparseable.
+  // Cache the result so repeated lang switches don't re-fetch.
+  let langFetch
+  if (_langCache.has(lang)) {
+    langFetch = Promise.resolve(_langCache.get(lang))
+  } else {
+    langFetch = (lang === 'en'
+      ? get(langFile)
+      : fetch(`${base}${langFile}`)
+          .then(r => (r.ok ? r.json() : get('data/sentences.json')))
+          .catch(() => get('data/sentences.json'))
+    ).then(result => { _langCache.set(lang, result); return result })
+  }
+
+  const safeFetch = (path, fallback) =>
+    fetch(`${base}${path}`)
+      .then(r => (r.ok ? r.json() : fallback))
+      .catch(() => fallback)
 
   const [w, s, l, rs, as, esl, al, el, cs, q] = await Promise.all([
     get('data/words.json'),
@@ -26,14 +42,13 @@ export async function loadData() {
     get('data/elite_sentences.json'),
     get('data/advanced_long_texts.json'),
     get('data/elite_long_texts.json'),
-    get('data/code_snippets.json'),
-    get('data/quotes.json'),
+    safeFetch('data/code_snippets.json', { snippets: [] }),
+    safeFetch('data/quotes.json',         { quotes:   [] }),
   ])
 
   const nonEn = lang !== 'en'
   const langSents = s.sentences || []
 
-  const toRoman = item => (item && typeof item === 'object') ? (item.roman || '') : (item || '')
   const toHindi = item => (item && typeof item === 'object') ? (item.hindi || '') : ''
 
   // For non-English, concatenate sentences into longer passages for countdown mode

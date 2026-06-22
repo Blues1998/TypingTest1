@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 const ROWS = [
   ['q','w','e','r','t','y','u','i','o','p'],
   ['a','s','d','f','g','h','j','k','l'],
@@ -25,16 +27,18 @@ function keyFg(acc) {
 export function KeyboardHeatmap({ keyStats }) {
   if (!keyStats || keyStats.length === 0) return null
 
-  const map = {}
-  for (const s of keyStats) map[s.key] = s
+  const { map, hasData, worst } = useMemo(() => {
+    const m = {}
+    for (const s of keyStats) m[s.key] = s
+    const hd = ROWS.flat().some(k => m[k])
+    const w = keyStats
+      .filter(s => s.errors > 0 && s.total >= 2)
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 6)
+    return { map: m, hasData: hd, worst: w }
+  }, [keyStats])
 
-  const hasData = ROWS.flat().some(k => map[k])
   if (!hasData) return null
-
-  const worst = keyStats
-    .filter(s => s.errors > 0 && s.total >= 2)
-    .sort((a, b) => a.accuracy - b.accuracy)
-    .slice(0, 6)
 
   return (
     <div className="mt-6">

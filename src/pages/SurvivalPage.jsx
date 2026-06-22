@@ -1,11 +1,11 @@
-import { useContext, useRef, useEffect, useState } from 'react'
+import { useContext, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DataContext } from '../App.jsx'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { UsernameModal } from '../components/leaderboard/UsernameModal.jsx'
 import { useSurvival } from '../hooks/useSurvival.js'
-import { submitScore, getPersonalScores } from '../services/scoreService.js'
-import { useUsername } from '../hooks/useUsername.js'
+import { getPersonalScores } from '../services/scoreService.js'
+import { useLeaderboardSubmit } from '../hooks/useLeaderboardSubmit.js'
 import { supabase } from '../services/supabase.js'
 
 function TimerDisplay({ time, cap }) {
@@ -38,45 +38,13 @@ function TimerDisplay({ time, cap }) {
 }
 
 function SurvivalResults({ score, isNewPB, onRestart }) {
-  const { username, setUsername, hasUsername } = useUsername()
-  const [showModal, setShowModal] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [submitError, setSubmitError] = useState(null)
-  const [myRank, setMyRank] = useState(null)
+  const { showModal, setShowModal, submitted, submitting, submitError, myRank, handleSubmitClick, handleModalConfirm } =
+    useLeaderboardSubmit({ mode: 'survival', wpm: score, accuracy: 100, timeTaken: 30 })
 
   const prevScores = getPersonalScores('survival')
   const prevBest = prevScores.length > 1
     ? Math.max(...prevScores.slice(0, -1).map(s => s.wpm))
     : 0
-
-  async function doSubmit(name) {
-    try {
-      await submitScore({ username: name, mode: 'survival', wpm: score, accuracy: 100, timeTaken: 30 })
-      setSubmitted(true)
-      // Fetch rank
-      if (supabase) {
-        const { count } = await supabase
-          .from('scores')
-          .select('*', { count: 'exact', head: true })
-          .eq('mode', 'survival')
-          .gt('wpm', score - 1)
-        if (count !== null) setMyRank(count)
-      }
-    } catch {
-      setSubmitError('Submit failed. Try again later.')
-    }
-  }
-
-  function handleSubmitClick() {
-    if (!hasUsername) setShowModal(true)
-    else doSubmit(username)
-  }
-
-  function handleModalConfirm(name) {
-    setUsername(name)
-    setShowModal(false)
-    doSubmit(name)
-  }
 
   return (
     <>
@@ -128,9 +96,10 @@ function SurvivalResults({ score, isNewPB, onRestart }) {
           {!submitted && supabase && (
             <button
               onClick={handleSubmitClick}
-              className="px-7 py-2 bg-main text-bg rounded-lg font-semibold text-sm hover:bg-main transition-colors"
+              disabled={submitting}
+              className="px-7 py-2 bg-main text-bg rounded-lg font-semibold text-sm hover:bg-main transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              save to leaderboard
+              {submitting ? 'saving...' : 'save to leaderboard'}
             </button>
           )}
           {submitted && (
@@ -178,7 +147,7 @@ export function SurvivalPage() {
         {/* Header */}
         <div className="w-full flex items-center justify-between mb-8">
           <span className="text-sub text-xs">survival</span>
-          <span className="text-sub text-xs">space to submit word</span>
+          <span className="text-sub text-xs">space or enter to submit</span>
         </div>
 
         {/* Timer */}
@@ -231,9 +200,21 @@ export function SurvivalPage() {
           />
         )}
 
+        {/* Word result flash */}
+        {phase === 'running' && (
+          <div className="h-5 mt-2 flex items-center justify-center">
+            {lastResult === 'correct' && (
+              <span className="text-xs font-semibold" style={{ color: 'var(--color-correct)' }}>+1.5s ✓</span>
+            )}
+            {lastResult === 'wrong' && (
+              <span className="text-xs font-semibold" style={{ color: 'var(--color-wrong)' }}>-1.5s ✗</span>
+            )}
+          </div>
+        )}
+
         {/* Feedback legend */}
         {phase === 'running' && (
-          <div className="flex gap-6 mt-4 text-xs text-sub">
+          <div className="flex gap-6 mt-2 text-xs text-sub">
             <span><span style={{ color: 'var(--color-correct)' }}>+{1.5}s</span> correct</span>
             <span><span style={{ color: 'var(--color-wrong)' }}>-{1.5}s</span> wrong</span>
           </div>

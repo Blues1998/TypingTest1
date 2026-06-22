@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 
 function fmtDate(ts) {
@@ -7,11 +8,11 @@ function fmtDate(ts) {
 export function WpmChart({ data }) {
   if (!data.length) return null
 
-  const chartData = data.map((s, i) => ({
+  const chartData = useMemo(() => data.map((s, i) => ({
     label: fmtDate(s.timestamp),
     wpm: s.wpm,
     index: i + 1,
-  }))
+  })), [data])
 
   return (
     <ResponsiveContainer width="100%" height={200}>
