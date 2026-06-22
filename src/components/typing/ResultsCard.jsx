@@ -2,14 +2,15 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UsernameModal } from '../leaderboard/UsernameModal.jsx'
-import { submitScore, getPersonalScores, getMyRank } from '../../services/scoreService.js'
-import { useUsername } from '../../hooks/useUsername.js'
+import { getPersonalScores } from '../../services/scoreService.js'
 import { supabase } from '../../services/supabase.js'
+import { useLeaderboardSubmit } from '../../hooks/useLeaderboardSubmit.js'
 import { WordChart } from './WordChart.jsx'
 import { KeyboardHeatmap } from './KeyboardHeatmap.jsx'
 import { buildWeakKeyText } from '../../utils/weakKeyDrill.js'
 import { getDailyStreak } from '../../utils/streakUtils.js'
 import { useTheme } from '../../hooks/useTheme.js'
+import { downloadResultsImage } from '../../utils/shareUtils.js'
 
 function useCountUp(target, duration = 900) {
   const [value, setValue] = useState(0)
@@ -47,74 +48,15 @@ function MistakeBreakdown({ chars, inputLength }) {
   )
 }
 
-function generateResultSvg(results, mode, difficulty, isDark) {
-  const bg     = isDark ? '#1a1a1a' : '#ffffff'
-  const fg     = isDark ? '#d1d1d1' : '#1a1a1a'
-  const main   = isDark ? '#e2b714' : '#c49a00'
-  const sub    = isDark ? '#777777' : '#888888'
-  const border = isDark ? '#2a2a2a' : '#e0e0e0'
-  const W = 520, H = 220
-
-  const rows = [
-    `<rect width="${W}" height="${H}" fill="${bg}" rx="12"/>`,
-    `<rect x="1" y="1" width="${W-2}" height="${H-2}" fill="none" stroke="${border}" stroke-width="1" rx="11"/>`,
-    `<text x="20" y="32" fill="${main}" font-family="monospace" font-size="13" font-weight="bold">typetest</text>`,
-    `<text x="20" y="110" fill="${main}" font-family="monospace" font-size="70" font-weight="bold">${results.wpm}</text>`,
-    `<text x="20" y="132" fill="${sub}" font-family="monospace" font-size="13">wpm</text>`,
-    `<text x="195" y="100" fill="${fg}" font-family="monospace" font-size="44" font-weight="bold">${results.accuracy}%</text>`,
-    `<text x="195" y="120" fill="${sub}" font-family="monospace" font-size="12">accuracy</text>`,
-  ]
-
-  if (results.consistency != null) {
-    rows.push(`<text x="365" y="100" fill="${fg}" font-family="monospace" font-size="44" font-weight="bold">${results.consistency}%</text>`)
-    rows.push(`<text x="365" y="120" fill="${sub}" font-family="monospace" font-size="12">consistency</text>`)
-  }
-
-  const meta = `${mode}${difficulty && difficulty !== mode ? ' · ' + difficulty : ''} · ${results.time}s`
-  rows.push(`<text x="20" y="${H - 18}" fill="${sub}" font-family="monospace" font-size="11">${meta}</text>`)
-
-  return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${rows.join('')}</svg>`
-}
-
-function downloadResultsImage(results, mode, difficulty, isDark) {
-  const svg = generateResultSvg(results, mode, difficulty, isDark)
-  const blob = new Blob([svg], { type: 'image/svg+xml' })
-  const svgUrl = URL.createObjectURL(blob)
-
-  const img = new Image()
-  img.onload = () => {
-    const W = 520, H = 220
-    const canvas = document.createElement('canvas')
-    canvas.width = W * 2
-    canvas.height = H * 2
-    const ctx = canvas.getContext('2d')
-    ctx.scale(2, 2)
-    ctx.drawImage(img, 0, 0)
-    canvas.toBlob(pngBlob => {
-      const url = URL.createObjectURL(pngBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `typetest-${results.wpm}wpm.png`
-      a.click()
-      URL.revokeObjectURL(url)
-      URL.revokeObjectURL(svgUrl)
-    })
-  }
-  img.src = svgUrl
-}
-
 export function ResultsCard({ results, chars = [], inputLength = 0, mode, difficulty = null, onRestart, onPracticeAgain, words = [] }) {
   const navigate = useNavigate()
   const { isDark } = useTheme()
   const mistakes = chars.slice(0, inputLength).filter(c => c.status === 'wrong').length
-  const { username, setUsername, hasUsername } = useUsername()
-  const [showModal, setShowModal] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState(null)
-  const [myRank, setMyRank] = useState(null)
   const [shared, setShared] = useState(false)
   const [savedImg, setSavedImg] = useState(false)
+
+  const { showModal, setShowModal, submitted, submitting, submitError, myRank, handleSubmitClick, handleModalConfirm } =
+    useLeaderboardSubmit({ mode, wpm: results?.wpm ?? 0, accuracy: results?.accuracy ?? 0, timeTaken: results?.time ?? 0, difficulty })
 
   const prevScores = useMemo(() => getPersonalScores(mode), [mode])
   const prevBest = prevScores.length > 1
@@ -127,31 +69,6 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
   const displayWpm  = useCountUp(results?.wpm)
   const displayAcc  = useCountUp(results?.accuracy)
   const displayCons = useCountUp(results?.consistency ?? 0)
-
-  async function doSubmit(name) {
-    setSubmitting(true)
-    try {
-      await submitScore({ username: name, mode, wpm: results.wpm, accuracy: results.accuracy, timeTaken: results.time, difficulty })
-      setSubmitted(true)
-      const rank = await getMyRank(mode, results.wpm - 1)
-      if (rank !== null) setMyRank(rank)
-    } catch {
-      setSubmitError('Submit failed. Try again later.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  function handleSubmitClick() {
-    if (!hasUsername) setShowModal(true)
-    else doSubmit(username)
-  }
-
-  function handleModalConfirm(name) {
-    setUsername(name)
-    setShowModal(false)
-    doSubmit(name)
-  }
 
   function handleShare() {
     const parts = [`${results.wpm} WPM`, `${results.accuracy}% acc`]

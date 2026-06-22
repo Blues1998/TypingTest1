@@ -1,11 +1,11 @@
-import { useContext, useRef, useEffect, useState } from 'react'
+import { useContext, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DataContext } from '../App.jsx'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { UsernameModal } from '../components/leaderboard/UsernameModal.jsx'
 import { useSurvival } from '../hooks/useSurvival.js'
-import { submitScore, getPersonalScores } from '../services/scoreService.js'
-import { useUsername } from '../hooks/useUsername.js'
+import { getPersonalScores } from '../services/scoreService.js'
+import { useLeaderboardSubmit } from '../hooks/useLeaderboardSubmit.js'
 import { supabase } from '../services/supabase.js'
 
 function TimerDisplay({ time, cap }) {
@@ -38,49 +38,13 @@ function TimerDisplay({ time, cap }) {
 }
 
 function SurvivalResults({ score, isNewPB, onRestart }) {
-  const { username, setUsername, hasUsername } = useUsername()
-  const [showModal, setShowModal] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState(null)
-  const [myRank, setMyRank] = useState(null)
+  const { showModal, setShowModal, submitted, submitting, submitError, myRank, handleSubmitClick, handleModalConfirm } =
+    useLeaderboardSubmit({ mode: 'survival', wpm: score, accuracy: 100, timeTaken: 30 })
 
   const prevScores = getPersonalScores('survival')
   const prevBest = prevScores.length > 1
     ? Math.max(...prevScores.slice(0, -1).map(s => s.wpm))
     : 0
-
-  async function doSubmit(name) {
-    setSubmitting(true)
-    try {
-      await submitScore({ username: name, mode: 'survival', wpm: score, accuracy: 100, timeTaken: 30 })
-      setSubmitted(true)
-      // Fetch rank
-      if (supabase) {
-        const { count } = await supabase
-          .from('scores')
-          .select('*', { count: 'exact', head: true })
-          .eq('mode', 'survival')
-          .gt('wpm', score - 1)
-        if (count !== null) setMyRank(count + 1)
-      }
-    } catch {
-      setSubmitError('Submit failed. Try again later.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  function handleSubmitClick() {
-    if (!hasUsername) setShowModal(true)
-    else doSubmit(username)
-  }
-
-  function handleModalConfirm(name) {
-    setUsername(name)
-    setShowModal(false)
-    doSubmit(name)
-  }
 
   return (
     <>

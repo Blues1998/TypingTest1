@@ -1,5 +1,7 @@
 const _langCache = new Map()
 
+export const toRoman = item => (item && typeof item === 'object') ? (item.roman || '') : (item || '')
+
 export async function loadData() {
   const base = import.meta.env.BASE_URL
   const get = path => fetch(`${base}${path}`).then(r => r.json())
@@ -42,7 +44,6 @@ export async function loadData() {
   const nonEn = lang !== 'en'
   const langSents = s.sentences || []
 
-  const toRoman = item => (item && typeof item === 'object') ? (item.roman || '') : (item || '')
   const toHindi = item => (item && typeof item === 'object') ? (item.hindi || '') : ''
 
   // For non-English, concatenate sentences into longer passages for countdown mode

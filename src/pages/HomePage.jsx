@@ -10,6 +10,7 @@ import {
   setDifficulty,
   TYPING_TIERS,
   BUBBLE_TIERS,
+  SUPPORTED_LANGS,
 } from '../utils/levelSystem.js'
 import { getDailyStreak, hasDoneToday } from '../utils/streakUtils.js'
 
@@ -51,14 +52,6 @@ const TIER_TOOLTIPS = {
   commander: '60-90 WPM · faster asteroids',
   admiral:   '90+ WPM · long words, very fast',
 }
-
-const LANGS = [
-  { key: 'en', label: 'EN' },
-  { key: 'es', label: 'ES' },
-  { key: 'fr', label: 'FR' },
-  { key: 'de', label: 'DE' },
-  { key: 'hi', label: 'HI' },
-]
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
@@ -238,7 +231,7 @@ function LangPills() {
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-sub text-[11px] mr-1">lang</span>
-      {LANGS.map(l => (
+      {SUPPORTED_LANGS.map(l => (
         <button
           key={l.key}
           onClick={e => pick(e, l.key)}

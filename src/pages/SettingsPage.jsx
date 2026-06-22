@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { useTheme } from '../hooks/useTheme.js'
+import { SUPPORTED_LANGS } from '../utils/levelSystem.js'
 
 // ── localStorage keys ─────────────────────────────────────────────────────
 
@@ -173,12 +174,12 @@ export function SettingsPage() {
           label="language"
           description="language of the typing passages"
         >
-          {['en', 'es', 'fr', 'de', 'hi'].map(l => (
+          {SUPPORTED_LANGS.map(l => (
             <OptionPill
-              key={l}
-              label={l.toUpperCase()}
-              active={lang === l}
-              onClick={() => setLang(l)}
+              key={l.key}
+              label={l.label}
+              active={lang === l.key}
+              onClick={() => setLang(l.key)}
             />
           ))}
         </SettingRow>

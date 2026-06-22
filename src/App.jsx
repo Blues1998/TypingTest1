@@ -75,18 +75,18 @@ function App() {
   }
 
   return (
-    <DataContext.Provider value={data}>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <DataContext.Provider value={data}>
         <div className="min-h-screen flex flex-col">
           <NavBar />
           <main className="flex-1">
             <AnimatedRoutes />
           </main>
         </div>
-      </BrowserRouter>
-      {/* Rendered outside BrowserRouter so PageWrapper transforms never trap it */}
-      <AchievementToast />
-    </DataContext.Provider>
+        {/* Rendered outside AnimatedRoutes so PageWrapper transforms never trap it */}
+        <AchievementToast />
+      </DataContext.Provider>
+    </BrowserRouter>
   )
 }
 

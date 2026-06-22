@@ -1,3 +1,11 @@
+export const SUPPORTED_LANGS = [
+  { key: 'en', label: 'EN' },
+  { key: 'es', label: 'ES' },
+  { key: 'fr', label: 'FR' },
+  { key: 'de', label: 'DE' },
+  { key: 'hi', label: 'HI' },
+]
+
 export const RANKS = [
   { min: 0,   label: 'Novice',   color: '#555555' },
   { min: 30,  label: 'Beginner', color: '#a0a0a0' },
