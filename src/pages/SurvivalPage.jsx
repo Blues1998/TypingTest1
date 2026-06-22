@@ -41,6 +41,7 @@ function SurvivalResults({ score, isNewPB, onRestart }) {
   const { username, setUsername, hasUsername } = useUsername()
   const [showModal, setShowModal] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [myRank, setMyRank] = useState(null)
 
@@ -50,6 +51,7 @@ function SurvivalResults({ score, isNewPB, onRestart }) {
     : 0
 
   async function doSubmit(name) {
+    setSubmitting(true)
     try {
       await submitScore({ username: name, mode: 'survival', wpm: score, accuracy: 100, timeTaken: 30 })
       setSubmitted(true)
@@ -60,10 +62,12 @@ function SurvivalResults({ score, isNewPB, onRestart }) {
           .select('*', { count: 'exact', head: true })
           .eq('mode', 'survival')
           .gt('wpm', score - 1)
-        if (count !== null) setMyRank(count)
+        if (count !== null) setMyRank(count + 1)
       }
     } catch {
       setSubmitError('Submit failed. Try again later.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -128,9 +132,10 @@ function SurvivalResults({ score, isNewPB, onRestart }) {
           {!submitted && supabase && (
             <button
               onClick={handleSubmitClick}
-              className="px-7 py-2 bg-main text-bg rounded-lg font-semibold text-sm hover:bg-main transition-colors"
+              disabled={submitting}
+              className="px-7 py-2 bg-main text-bg rounded-lg font-semibold text-sm hover:bg-main transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              save to leaderboard
+              {submitting ? 'saving...' : 'save to leaderboard'}
             </button>
           )}
           {submitted && (
@@ -178,7 +183,7 @@ export function SurvivalPage() {
         {/* Header */}
         <div className="w-full flex items-center justify-between mb-8">
           <span className="text-sub text-xs">survival</span>
-          <span className="text-sub text-xs">space to submit word</span>
+          <span className="text-sub text-xs">space or enter to submit</span>
         </div>
 
         {/* Timer */}
@@ -231,9 +236,21 @@ export function SurvivalPage() {
           />
         )}
 
+        {/* Word result flash */}
+        {phase === 'running' && (
+          <div className="h-5 mt-2 flex items-center justify-center">
+            {lastResult === 'correct' && (
+              <span className="text-xs font-semibold" style={{ color: 'var(--color-correct)' }}>+1.5s ✓</span>
+            )}
+            {lastResult === 'wrong' && (
+              <span className="text-xs font-semibold" style={{ color: 'var(--color-wrong)' }}>-1.5s ✗</span>
+            )}
+          </div>
+        )}
+
         {/* Feedback legend */}
         {phase === 'running' && (
-          <div className="flex gap-6 mt-4 text-xs text-sub">
+          <div className="flex gap-6 mt-2 text-xs text-sub">
             <span><span style={{ color: 'var(--color-correct)' }}>+{1.5}s</span> correct</span>
             <span><span style={{ color: 'var(--color-wrong)' }}>-{1.5}s</span> wrong</span>
           </div>

@@ -97,7 +97,7 @@ function DifficultyPills({ mode, tiers }) {
   )
 }
 
-function DurationPills({ onClick }) {
+function DurationPills() {
   const [active, setActive] = useState(getCountdownDur)
   const DURATIONS = [15, 30, 60, 120]
 

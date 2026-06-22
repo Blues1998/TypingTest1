@@ -151,7 +151,7 @@ export const ACHIEVEMENTS = [
 // IDs of non-diamond achievements (used for grandmaster check)
 const NON_DIAMOND_IDS = ACHIEVEMENTS.filter(a => a.tier !== 'diamond').map(a => a.id)
 
-function checkCondition(id, scores, streak) {
+function checkCondition(id, scores, streak, stored) {
   switch (id) {
     case 'first_test':     return scores.length >= 1
     case 'tests_10':       return scores.length >= 10
@@ -181,21 +181,27 @@ function checkCondition(id, scores, streak) {
       const modes = new Set(scores.map(s => s.mode))
       return modes.size >= 5
     }
-    case 'grandmaster': {
-      const stored = new Set(JSON.parse(localStorage.getItem('typingtest_achievements') || '[]'))
+    case 'grandmaster':
       return NON_DIAMOND_IDS.every(aid => stored.has(aid))
-    }
     default: return false
   }
 }
 
+function safeParseAchievements() {
+  try {
+    return JSON.parse(localStorage.getItem('typingtest_achievements') || '[]')
+  } catch {
+    return []
+  }
+}
+
 export function checkAchievements(scores) {
-  const stored = new Set(JSON.parse(localStorage.getItem('typingtest_achievements') || '[]'))
+  const stored = new Set(safeParseAchievements())
   const streak = getDailyStreak()
   const newlyUnlocked = []
 
   for (const a of ACHIEVEMENTS) {
-    if (!stored.has(a.id) && checkCondition(a.id, scores, streak)) {
+    if (!stored.has(a.id) && checkCondition(a.id, scores, streak, stored)) {
       newlyUnlocked.push(a)
       stored.add(a.id)
     }
@@ -210,7 +216,7 @@ export function checkAchievements(scores) {
 }
 
 export function getUnlockedSet() {
-  return new Set(JSON.parse(localStorage.getItem('typingtest_achievements') || '[]'))
+  return new Set(safeParseAchievements())
 }
 
 export function getUnlockedAchievements() {

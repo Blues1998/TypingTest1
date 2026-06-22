@@ -110,6 +110,7 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
   const { username, setUsername, hasUsername } = useUsername()
   const [showModal, setShowModal] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [myRank, setMyRank] = useState(null)
   const [shared, setShared] = useState(false)
@@ -128,6 +129,7 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
   const displayCons = useCountUp(results?.consistency ?? 0)
 
   async function doSubmit(name) {
+    setSubmitting(true)
     try {
       await submitScore({ username: name, mode, wpm: results.wpm, accuracy: results.accuracy, timeTaken: results.time, difficulty })
       setSubmitted(true)
@@ -135,6 +137,8 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
       if (rank !== null) setMyRank(rank)
     } catch {
       setSubmitError('Submit failed. Try again later.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -289,9 +293,10 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
           {!submitted && supabase && (
             <button
               onClick={handleSubmitClick}
-              className="px-6 py-2 rounded-lg bg-main text-bg hover:bg-main transition-colors text-sm font-semibold"
+              disabled={submitting}
+              className="px-6 py-2 rounded-lg bg-main text-bg hover:bg-main transition-colors text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              save to leaderboard
+              {submitting ? 'saving...' : 'save to leaderboard'}
             </button>
           )}
           {submitted && (
@@ -315,7 +320,6 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
             <span className="px-6 py-2 text-wrong text-sm">{submitError}</span>
           )}
         </div>
-        <p className="text-center text-sub text-xs mt-4">tab + enter to restart</p>
       </motion.div>
     </>
   )

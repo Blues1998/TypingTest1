@@ -146,7 +146,8 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     if (finalWpm > 0) {
       const key = ghostKey(mode, difficulty, hashText(textRef.current))
       const existing = localStorage.getItem(key)
-      const existingWpm = existing ? (JSON.parse(existing).wpm ?? 0) : 0
+      let existingWpm = 0
+      try { existingWpm = existing ? (JSON.parse(existing).wpm ?? 0) : 0 } catch { /* ignore */ }
       if (finalWpm > existingWpm) {
         const mistakes = charsRef.current
           .slice(0, inputLengthRef.current)

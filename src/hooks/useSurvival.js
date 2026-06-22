@@ -3,9 +3,10 @@ import { savePersonalScore, getPersonalScores } from '../services/scoreService.j
 import { checkAchievements } from '../utils/achievements.js'
 
 function extractWords(sentences) {
-  const raw = sentences.flatMap(s =>
-    s.replace(/[^a-zA-Z\s]/g, '').split(/\s+/).filter(w => w.length >= 3)
-  )
+  const raw = sentences.flatMap(s => {
+    const text = (s && typeof s === 'object') ? (s.roman || '') : (s || '')
+    return text.replace(/[^a-zA-Z\s]/g, '').split(/\s+/).filter(w => w.length >= 3)
+  })
   for (let i = raw.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [raw[i], raw[j]] = [raw[j], raw[i]]
