@@ -28,6 +28,11 @@ export async function loadData() {
     ).then(result => { _langCache.set(lang, result); return result })
   }
 
+  const safeFetch = (path, fallback) =>
+    fetch(`${base}${path}`)
+      .then(r => (r.ok ? r.json() : fallback))
+      .catch(() => fallback)
+
   const [w, s, l, rs, as, esl, al, el, cs, q] = await Promise.all([
     get('data/words.json'),
     langFetch,
@@ -37,8 +42,8 @@ export async function loadData() {
     get('data/elite_sentences.json'),
     get('data/advanced_long_texts.json'),
     get('data/elite_long_texts.json'),
-    get('data/code_snippets.json'),
-    get('data/quotes.json'),
+    safeFetch('data/code_snippets.json', { snippets: [] }),
+    safeFetch('data/quotes.json',         { quotes:   [] }),
   ])
 
   const nonEn = lang !== 'en'
