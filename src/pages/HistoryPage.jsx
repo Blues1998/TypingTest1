@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { WpmChart } from '../components/history/WpmChart.jsx'
 import { HistoryTable } from '../components/history/HistoryTable.jsx'
@@ -97,12 +97,11 @@ export function HistoryPage() {
   const activeDays = TIMEFRAMES.find(t => t.key === activeTimeframe)?.days ?? null
   const periodLabel = activeTimeframe === 'all' ? 'all-time' : activeTimeframe
 
-  const allData = getPersonalScores(activeMode)
-  const data    = filterByDays(allData, activeDays)
-
-  const overview       = getStatsOverview(activeDays)
-  const streak         = getDailyStreak()
-  const aggregateKeys  = getAggregateKeyStats()
+  const allData      = useMemo(() => getPersonalScores(activeMode),  [activeMode, tick])
+  const data         = useMemo(() => filterByDays(allData, activeDays), [allData, activeDays])
+  const overview     = useMemo(() => getStatsOverview(activeDays),   [activeDays, tick])
+  const streak       = useMemo(() => getDailyStreak(),                [tick])
+  const aggregateKeys = useMemo(() => getAggregateKeyStats(),         [tick])
 
   function handleClear() {
     if (!confirmClear) { setConfirmClear(true); return }

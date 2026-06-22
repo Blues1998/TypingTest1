@@ -14,6 +14,13 @@ function extractWords(sentences) {
   return raw
 }
 
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+}
+
 const STARTING_TIME = 30.0
 const TIME_CAP      = 90.0
 const CORRECT_BONUS =  1.5
@@ -53,7 +60,6 @@ export function useSurvival({ sentences = [] }) {
     savePersonalScore({ wpm: finalScore, accuracy: 100, timeTaken: 30, mode: 'survival' })
     checkAchievements(getPersonalScores())
 
-    // Check personal best (compare against prior runs, excluding this one)
     const prevScores = getPersonalScores('survival')
     const prevBest = prevScores.length > 1
       ? Math.max(...prevScores.slice(0, -1).map(s => s.wpm))
@@ -61,15 +67,14 @@ export function useSurvival({ sentences = [] }) {
     if (finalScore > prevBest) setIsNewPB(true)
   }, [])
 
-  useEffect(() => {
-    if (wordPool.current.length === 0) return
+  // Extracted to remove duplication between useEffect (initial start) and restart()
+  const startTimer = useCallback(() => {
+    clearInterval(timerRef.current)
     startTimeRef.current = Date.now()
-
     timerRef.current = setInterval(() => {
       timeRef.current = Math.max(0, timeRef.current - TICK_MS / 1000)
       setTimeDisplay(Math.max(0, timeRef.current))
 
-      // Update live WPM
       const elapsedSec = (Date.now() - startTimeRef.current) / 1000
       if (elapsedSec > 2) {
         setLiveWpm(Math.round((scoreRef.current * 5) / (elapsedSec / 60)))
@@ -79,9 +84,13 @@ export function useSurvival({ sentences = [] }) {
         endGame()
       }
     }, TICK_MS)
-
-    return () => clearInterval(timerRef.current)
   }, [endGame])
+
+  useEffect(() => {
+    if (wordPool.current.length === 0) return
+    startTimer()
+    return () => clearInterval(timerRef.current)
+  }, [startTimer])
 
   function handleInput(e) {
     const val = e.target.value
@@ -105,14 +114,13 @@ export function useSurvival({ sentences = [] }) {
     setInputValue(val)
   }
 
-  function restart() {
-    clearInterval(timerRef.current)
-    wordPool.current = extractWords(sentences)
+  const restart = useCallback(() => {
+    // Reshuffle the existing pool instead of re-extracting from sentences (faster on restart)
+    shuffleInPlace(wordPool.current)
     wordIndexRef.current = 0
     timeRef.current = STARTING_TIME
     scoreRef.current = 0
     phaseRef.current = 'running'
-    startTimeRef.current = Date.now()
 
     setCurrentWord(wordPool.current[0] || '')
     setInputValue('')
@@ -123,20 +131,8 @@ export function useSurvival({ sentences = [] }) {
     setLiveWpm(0)
     setIsNewPB(false)
 
-    timerRef.current = setInterval(() => {
-      timeRef.current = Math.max(0, timeRef.current - TICK_MS / 1000)
-      setTimeDisplay(Math.max(0, timeRef.current))
-
-      const elapsedSec = (Date.now() - startTimeRef.current) / 1000
-      if (elapsedSec > 2) {
-        setLiveWpm(Math.round((scoreRef.current * 5) / (elapsedSec / 60)))
-      }
-
-      if (timeRef.current <= 0 && phaseRef.current === 'running') {
-        endGame()
-      }
-    }, TICK_MS)
-  }
+    startTimer()
+  }, [startTimer])
 
   return { currentWord, inputValue, timeDisplay, score, phase, lastResult, liveWpm, isNewPB, handleInput, restart, TIME_CAP }
 }

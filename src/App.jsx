@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext } from 'react'
+import { useState, useEffect, useCallback, createContext } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { loadData } from './utils/dataLoader.js'
@@ -48,7 +48,7 @@ function App() {
   useTheme() // initialize data-theme attribute on <html> immediately
   const [data, setData] = useState(null)
 
-  function fetchData() {
+  const fetchData = useCallback(() => {
     loadData().then(setData).catch(() => {
       setData({
         words: [],
@@ -58,13 +58,13 @@ function App() {
         quotes: [],
       })
     })
-  }
+  }, [])
 
   useEffect(() => {
     fetchData()
     window.addEventListener('typingtest-lang-changed', fetchData)
     return () => window.removeEventListener('typingtest-lang-changed', fetchData)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchData])
 
   if (!data) {
     return (

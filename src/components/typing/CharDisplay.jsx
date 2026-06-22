@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Caret } from './Caret.jsx'
 
 const statusClass = {
@@ -16,7 +17,7 @@ function GhostCaret() {
   )
 }
 
-export function CharDisplay({ chars, caretIndex, ghostCaretIndex = null, isCode = false, caretStyle = 'line' }) {
+export const CharDisplay = memo(function CharDisplay({ chars, caretIndex, ghostCaretIndex = null, isCode = false, caretStyle = 'line' }) {
   const Tag = isCode ? 'pre' : 'p'
   return (
     <Tag
@@ -49,4 +50,4 @@ export function CharDisplay({ chars, caretIndex, ghostCaretIndex = null, isCode 
       )}
     </Tag>
   )
-}
+})

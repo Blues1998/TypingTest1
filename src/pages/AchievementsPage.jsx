@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { ACHIEVEMENTS, TIER_META, getUnlockedSet } from '../utils/achievements.js'
@@ -119,17 +120,19 @@ function TierSection({ tier, achievements, unlocked, startIndex }) {
 // ── Page ─────────────────────────────────────────────────────────────────
 
 export function AchievementsPage() {
-  const unlocked = getUnlockedSet()
-  const total = ACHIEVEMENTS.filter(a => a.tier !== 'diamond').length
-  const earned = ACHIEVEMENTS.filter(a => a.tier !== 'diamond' && unlocked.has(a.id)).length
-
-  const byTier = {
+  const unlocked = useMemo(() => getUnlockedSet(), [])
+  const byTier = useMemo(() => ({
     diamond: ACHIEVEMENTS.filter(a => a.tier === 'diamond'),
     gold:    ACHIEVEMENTS.filter(a => a.tier === 'gold'),
     silver:  ACHIEVEMENTS.filter(a => a.tier === 'silver'),
     bronze:  ACHIEVEMENTS.filter(a => a.tier === 'bronze'),
-  }
+  }), [])
 
+  const total  = byTier.bronze.length + byTier.silver.length + byTier.gold.length
+  const earned = useMemo(() =>
+    [...byTier.bronze, ...byTier.silver, ...byTier.gold].filter(a => unlocked.has(a.id)).length,
+    [byTier, unlocked]
+  )
   const pct = total > 0 ? Math.round((earned / total) * 100) : 0
 
   return (

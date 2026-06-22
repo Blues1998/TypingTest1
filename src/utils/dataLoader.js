@@ -1,3 +1,5 @@
+const _langCache = new Map()
+
 export async function loadData() {
   const base = import.meta.env.BASE_URL
   const get = path => fetch(`${base}${path}`).then(r => r.json())
@@ -10,12 +12,19 @@ export async function loadData() {
     : lang === 'hi' ? 'data/sentences_hi.json'
     : 'data/sentences.json'
 
-  // Language file: fall back to English if the file is missing or unparseable
-  const langFetch = lang === 'en'
-    ? get(langFile)
-    : fetch(`${base}${langFile}`)
-        .then(r => (r.ok ? r.json() : get('data/sentences.json')))
-        .catch(() => get('data/sentences.json'))
+  // Language file: fall back to English if the file is missing or unparseable.
+  // Cache the result so repeated lang switches don't re-fetch.
+  let langFetch
+  if (_langCache.has(lang)) {
+    langFetch = Promise.resolve(_langCache.get(lang))
+  } else {
+    langFetch = (lang === 'en'
+      ? get(langFile)
+      : fetch(`${base}${langFile}`)
+          .then(r => (r.ok ? r.json() : get('data/sentences.json')))
+          .catch(() => get('data/sentences.json'))
+    ).then(result => { _langCache.set(lang, result); return result })
+  }
 
   const [w, s, l, rs, as, esl, al, el, cs, q] = await Promise.all([
     get('data/words.json'),

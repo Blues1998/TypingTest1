@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UsernameModal } from '../leaderboard/UsernameModal.jsx'
@@ -116,7 +116,7 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
   const [shared, setShared] = useState(false)
   const [savedImg, setSavedImg] = useState(false)
 
-  const prevScores = getPersonalScores(mode)
+  const prevScores = useMemo(() => getPersonalScores(mode), [mode])
   const prevBest = prevScores.length > 1
     ? Math.max(...prevScores.slice(0, -1).map(s => s.wpm))
     : 0
