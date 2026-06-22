@@ -135,22 +135,25 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
       .map(([k, v]) => ({ key: k, accuracy: Math.round(((v.total - v.errors) / v.total) * 100), errors: v.errors, total: v.total }))
 
     const consistency = calcConsistency(wordWpms)
-    const res = { wpm: finalWpm, accuracy: finalAccuracy, time: Math.round(finalElapsed * 10) / 10, wordWpms, keyStats, consistency }
+    const validResult = finalAccuracy >= 50 && finalElapsed >= 3
+    const res = { wpm: finalWpm, accuracy: finalAccuracy, time: Math.round(finalElapsed * 10) / 10, wordWpms, keyStats, consistency, valid: validResult }
     setResults(res)
     setPhase('finished')
-    savePersonalScore({ wpm: finalWpm, accuracy: finalAccuracy, timeTaken: finalElapsed, mode, difficulty, consistency, keyStats })
+    if (validResult) {
+      savePersonalScore({ wpm: finalWpm, accuracy: finalAccuracy, timeTaken: finalElapsed, mode, difficulty, consistency, keyStats })
+    }
 
-    if (mode === 'daily') {
+    if (mode === 'daily' && validResult) {
       recordDailyCompletion()
       const streak = getDailyStreak()
       res.streak = streak
     }
 
     // Achievement check — dispatches 'typingtest-achievements' event internally
-    checkAchievements(getPersonalScores())
+    if (validResult) checkAchievements(getPersonalScores())
 
     // Ghost replay
-    if (finalWpm > 0) {
+    if (finalWpm > 0 && validResult) {
       const key = ghostKey(mode, difficulty, hashText(textRef.current))
       const existing = localStorage.getItem(key)
       let existingWpm = 0
@@ -235,9 +238,6 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     if (e.key === 'Tab') { e.preventDefault(); tabHeldRef.current = true }
     if (e.key === 'Enter') {
       if (tabHeldRef.current) { e.preventDefault(); restart(); return }
-      if ((mode === 'stopwatch' || mode === 'daily' || mode === 'words' || mode === 'quotes') && phase === 'running') {
-        e.preventDefault(); finishTest()
-      }
     }
   }
 

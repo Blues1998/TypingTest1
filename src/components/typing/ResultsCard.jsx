@@ -62,7 +62,7 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
   const prevBest = prevScores.length > 1
     ? Math.max(...prevScores.slice(0, -1).map(s => s.wpm))
     : 0
-  const isNewPB = results && results.wpm > 0 && results.wpm > prevBest
+  const isNewPB = results && results.valid && results.wpm > 0 && results.wpm > prevBest
 
   const streak = mode === 'daily' ? getDailyStreak() : 0
 
@@ -140,6 +140,12 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
           </motion.div>
         )}
 
+        {!results.valid && (
+          <div className="text-center text-xs text-sub mb-4">
+            not counted — accuracy too low or test too short
+          </div>
+        )}
+
         {/* Daily streak */}
         {mode === 'daily' && streak > 0 && (
           <div className="text-center text-xs text-sub mb-4">
@@ -207,7 +213,7 @@ export function ResultsCard({ results, chars = [], inputLength = 0, mode, diffic
           >
             {onPracticeAgain ? 'new text' : 'try again'}
           </button>
-          {!submitted && supabase && (
+          {!submitted && supabase && results.valid && (
             <button
               onClick={handleSubmitClick}
               disabled={submitting}
