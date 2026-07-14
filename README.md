@@ -85,3 +85,9 @@ The leaderboard requires a Supabase project. Copy `.env.local.example` to `.env.
 | ![Home](screenshots/01-home.png) | ![Stopwatch](screenshots/02-typing-stopwatch.png) |
 | ![Countdown](screenshots/03-typing-countdown.png) | ![Stellar Drift](screenshots/04-bubble.png) |
 | ![Leaderboard](screenshots/05-leaderboard.png) | ![History](screenshots/06-history.png) |
+
+---
+
+## License
+
+[MIT](LICENSE)
