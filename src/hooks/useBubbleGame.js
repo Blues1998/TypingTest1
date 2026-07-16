@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { BUBBLE_PRESETS, getWordsByTier } from '../utils/levelSystem.js'
+import { savePersonalScore, getPersonalScores } from '../services/scoreService.js'
+import { checkAchievements } from '../utils/achievements.js'
 
 export const CANVAS_W = 1200
 export const CANVAS_H = 700
@@ -267,6 +269,9 @@ export function useBubbleGame({ canvasRef, words = [], difficulty = 'pilot', onD
   const [strikes, setStrikes] = useState(0)
   const [wave,    setWave]    = useState(1)
   const [phase,   setPhase]   = useState('idle')
+  const [timeTaken, setTimeTaken] = useState(0)
+
+  const startTimeRef = useRef(null)
 
   // All hot game state in refs to avoid stale closures in RAF
   const asteroidsRef     = useRef([])
@@ -389,6 +394,13 @@ export function useBubbleGame({ canvasRef, words = [], difficulty = 'pilot', onD
     cancelAnimationFrame(rafRef.current)
     clearTimeout(spawnTimerRef.current)
     clearTimeout(shootTimerRef.current)
+
+    const finalTimeTaken = startTimeRef.current
+      ? Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10
+      : 0
+    setTimeTaken(finalTimeTaken)
+    savePersonalScore({ wpm: scoreRef.current, accuracy: 100, timeTaken: finalTimeTaken, mode: 'bubble' })
+    checkAchievements(getPersonalScores())
   }, [])
 
   // ── Start (idle → running) ────────────────────────────────────────────
@@ -404,11 +416,13 @@ export function useBubbleGame({ canvasRef, words = [], difficulty = 'pilot', onD
     strikesRef.current       = 0
     waveRef.current          = 1
     phaseRef.current         = 'running'
+    startTimeRef.current     = Date.now()
 
     setScore(0)
     setStrikes(0)
     setWave(1)
     setPhase('running')
+    setTimeTaken(0)
 
     // RAF is already running (background animation from idle)
     spawnTimerRef.current = setTimeout(spawnAsteroid, 700)
@@ -547,16 +561,18 @@ export function useBubbleGame({ canvasRef, words = [], difficulty = 'pilot', onD
     spawnIntervalRef.current = preset.spawn
     wordPoolRef.current      = [...tieredWords]
     phaseRef.current         = 'running'
+    startTimeRef.current     = Date.now()
 
     setScore(0)
     setStrikes(0)
     setWave(1)
     setPhase('running')
+    setTimeTaken(0)
 
     rafRef.current        = requestAnimationFrame(gameLoopRef.current)
     spawnTimerRef.current = setTimeout(spawnAsteroid, 700)
     shootTimerRef.current = setTimeout(spawnShootingStar, rand(2000, 5000))
   }
 
-  return { score, strikes, wave, phase, inputRef, handleWordInput, start, restart, CANVAS_W, CANVAS_H }
+  return { score, strikes, wave, phase, timeTaken, inputRef, handleWordInput, start, restart, CANVAS_W, CANVAS_H }
 }
