@@ -117,7 +117,7 @@ export function TypingPage() {
   const data = useContext(DataContext)
 
   const customText = searchParams.get('text')
-  const difficulty = getDifficulty(mode)
+  const difficulty = searchParams.get('difficulty') || getDifficulty(mode)
   const duration = parseInt(searchParams.get('duration') || '60', 10)
   const wordCount = parseInt(searchParams.get('n') || '25', 10)
 
