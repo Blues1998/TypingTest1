@@ -80,7 +80,10 @@ export async function loadData() {
   }
 }
 
+const FALLBACK_TEXT = 'The quick brown fox jumps over the lazy dog.'
+
 function randomFrom(pool) {
+  if (!pool || pool.length === 0) return FALLBACK_TEXT
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
@@ -92,6 +95,7 @@ export function pickPassage(mode, difficulty = 'standard', data, exclude = null,
   if (mode === 'daily') {
     const today = new Date().toISOString().slice(0, 10)
     const pool = [...(data.sentences?.standard || []), ...(data.sentences?.advanced || [])]
+    if (pool.length === 0) return FALLBACK_TEXT
     return pool[hashStr(today) % pool.length]
   }
 
