@@ -17,7 +17,7 @@ export function useLeaderboardSubmit({ mode, wpm, accuracy, timeTaken, difficult
     try {
       await submitScore({ username: name, mode, wpm, accuracy, timeTaken, difficulty })
       setSubmitted(true)
-      const rank = await getMyRank(mode, wpm - 1)
+      const rank = await getMyRank(mode, wpm)
       if (rank !== null) setMyRank(rank)
     } catch {
       setSubmitError('Submit failed. Try again later.')
