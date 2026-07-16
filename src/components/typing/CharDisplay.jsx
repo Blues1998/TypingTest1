@@ -40,6 +40,8 @@ export const CharDisplay = memo(function CharDisplay({ chars, caretIndex, ghostC
           {c.char}
         </span>
       ))}
+      {/* Trailing ghost caret — shown when the ghost has finished typing the full text */}
+      {ghostCaretIndex !== null && ghostCaretIndex >= chars.length && <GhostCaret />}
       {/* Trailing caret — shown when all text is typed */}
       {caretIndex >= chars.length && (
         caretStyle === 'line'
