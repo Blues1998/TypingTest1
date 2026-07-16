@@ -18,12 +18,14 @@ function useCountUp(target, duration = 900) {
     if (!target) return
     setValue(0)
     const start = performance.now()
+    let rafId
     function step(now) {
       const progress = Math.min((now - start) / duration, 1)
       setValue(Math.round(progress * target))
-      if (progress < 1) requestAnimationFrame(step)
+      if (progress < 1) rafId = requestAnimationFrame(step)
     }
-    requestAnimationFrame(step)
+    rafId = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(rafId)
   }, [target, duration])
   return value
 }
