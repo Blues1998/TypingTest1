@@ -19,13 +19,18 @@ export async function loadData() {
   let langFetch
   if (_langCache.has(lang)) {
     langFetch = Promise.resolve(_langCache.get(lang))
+  } else if (lang === 'en') {
+    langFetch = get(langFile).then(result => { _langCache.set(lang, result); return result })
   } else {
-    langFetch = (lang === 'en'
-      ? get(langFile)
-      : fetch(`${base}${langFile}`)
-          .then(r => (r.ok ? r.json() : get('data/sentences.json')))
-          .catch(() => get('data/sentences.json'))
-    ).then(result => { _langCache.set(lang, result); return result })
+    langFetch = fetch(`${base}${langFile}`)
+      .then(r => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then(result => {
+        if (result) { _langCache.set(lang, result); return result }
+        // Fetch failed — fall back to English but don't cache it under `lang`,
+        // so a later retry (e.g. after connectivity returns) isn't stuck serving English.
+        return get('data/sentences.json')
+      })
   }
 
   const safeFetch = (path, fallback) =>
