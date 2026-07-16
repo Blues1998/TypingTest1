@@ -45,6 +45,7 @@ export function useSurvival({ sentences = [] }) {
   const [lastResult,  setLastResult]  = useState(null) // 'correct' | 'wrong'
   const [liveWpm,     setLiveWpm]     = useState(0)
   const [isNewPB,     setIsNewPB]     = useState(false)
+  const [timeTaken,   setTimeTaken]   = useState(0)
 
   function advanceWord() {
     wordIndexRef.current = (wordIndexRef.current + 1) % wordPool.current.length
@@ -57,7 +58,9 @@ export function useSurvival({ sentences = [] }) {
     setPhase('dead')
 
     const finalScore = scoreRef.current
-    savePersonalScore({ wpm: finalScore, accuracy: 100, timeTaken: 30, mode: 'survival' })
+    const finalTimeTaken = Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10
+    setTimeTaken(finalTimeTaken)
+    savePersonalScore({ wpm: finalScore, accuracy: 100, timeTaken: finalTimeTaken, mode: 'survival' })
     checkAchievements(getPersonalScores())
 
     const prevScores = getPersonalScores('survival')
@@ -130,9 +133,10 @@ export function useSurvival({ sentences = [] }) {
     setLastResult(null)
     setLiveWpm(0)
     setIsNewPB(false)
+    setTimeTaken(0)
 
     startTimer()
   }, [startTimer])
 
-  return { currentWord, inputValue, timeDisplay, score, phase, lastResult, liveWpm, isNewPB, handleInput, restart, TIME_CAP }
+  return { currentWord, inputValue, timeDisplay, score, phase, lastResult, liveWpm, isNewPB, timeTaken, handleInput, restart, TIME_CAP }
 }

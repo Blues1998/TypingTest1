@@ -37,9 +37,9 @@ function TimerDisplay({ time, cap }) {
   )
 }
 
-function SurvivalResults({ score, isNewPB, onRestart }) {
+function SurvivalResults({ score, isNewPB, timeTaken, onRestart }) {
   const { showModal, setShowModal, submitted, submitting, submitError, myRank, handleSubmitClick, handleModalConfirm } =
-    useLeaderboardSubmit({ mode: 'survival', wpm: score, accuracy: 100, timeTaken: 30 })
+    useLeaderboardSubmit({ mode: 'survival', wpm: score, accuracy: 100, timeTaken })
 
   const prevScores = getPersonalScores('survival')
   const prevBest = prevScores.length > 1
@@ -125,7 +125,7 @@ export function SurvivalPage() {
 
   const {
     currentWord, inputValue, timeDisplay, score, liveWpm,
-    phase, lastResult, isNewPB, handleInput, restart, TIME_CAP,
+    phase, lastResult, isNewPB, timeTaken, handleInput, restart, TIME_CAP,
   } = useSurvival({ sentences: allSentences })
 
   useEffect(() => {
@@ -222,7 +222,7 @@ export function SurvivalPage() {
 
         {/* Game over */}
         {phase === 'dead' && (
-          <SurvivalResults score={score} isNewPB={isNewPB} onRestart={restart} />
+          <SurvivalResults score={score} isNewPB={isNewPB} timeTaken={timeTaken} onRestart={restart} />
         )}
       </div>
     </PageWrapper>
