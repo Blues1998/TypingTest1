@@ -22,11 +22,13 @@ export function LeaderboardPage() {
   const { username } = useUsername()
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
     setFetchError(false)
     getLeaderboard(activeMode)
-      .then(rows => { setData(rows); setLoading(false) })
-      .catch(() => { setFetchError(true); setData([]); setLoading(false) })
+      .then(rows => { if (!cancelled) { setData(rows); setLoading(false) } })
+      .catch(() => { if (!cancelled) { setFetchError(true); setData([]); setLoading(false) } })
+    return () => { cancelled = true }
   }, [activeMode])
 
   return (
