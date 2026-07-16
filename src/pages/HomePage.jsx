@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { DataContext } from '../App.jsx'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
-import { getPersonalScores } from '../services/scoreService.js'
+import { getPersonalScores, WPM_MODES } from '../services/scoreService.js'
 import {
   getRank,
   getDifficulty,
@@ -227,13 +227,14 @@ function LangPills() {
 
 function getSessionStats(allScores) {
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0)
-  const today = allScores.filter(s => s.timestamp >= startOfDay.getTime())
+  const today = allScores.filter(s => s.timestamp >= startOfDay.getTime() && WPM_MODES.includes(s.mode))
   if (today.length > 0) {
     const avg = Math.round(today.reduce((sum, s) => sum + s.wpm, 0) / today.length)
     return `today: ${today.length} game${today.length > 1 ? 's' : ''} · avg ${avg} wpm`
   }
-  if (allScores.length > 0) {
-    const last = allScores[allScores.length - 1]
+  const wpmScores = allScores.filter(s => WPM_MODES.includes(s.mode))
+  if (wpmScores.length > 0) {
+    const last = wpmScores[wpmScores.length - 1]
     return `last session: ${last.wpm} wpm`
   }
   return null
@@ -249,7 +250,8 @@ export function HomePage() {
   const [showCustom, setShowCustom] = useState(false)
 
   const allScores = getPersonalScores()
-  const best = allScores.length ? Math.max(...allScores.map(s => s.wpm)) : null
+  const wpmScores = allScores.filter(s => WPM_MODES.includes(s.mode))
+  const best = wpmScores.length ? Math.max(...wpmScores.map(s => s.wpm)) : null
   const rank = getRank(best)
   const sessionStats = getSessionStats(allScores)
   const streak = getDailyStreak()

@@ -2,6 +2,11 @@ import { supabase } from './supabase.js'
 
 const LS_KEY = 'typingtest_scores'
 
+// Modes whose `wpm` field is a genuine words-per-minute figure. Other modes
+// (survival's word count, bubble's arcade score) reuse the `wpm` field for
+// storage convenience but must be excluded from aggregate WPM stats.
+export const WPM_MODES = ['stopwatch', 'countdown', 'words', 'quotes', 'daily', 'code']
+
 function safeParseScores() {
   try {
     return JSON.parse(localStorage.getItem(LS_KEY) || '[]')
@@ -59,9 +64,10 @@ export function getStatsOverview(periodDays = 7) {
     if (!modeMap[s.mode] || s.wpm > modeMap[s.mode]) modeMap[s.mode] = s.wpm
   }
 
-  // Period averages
+  // Period averages — only over modes where wpm/accuracy are genuine figures
   const cutoff = periodDays ? Date.now() - periodDays * 24 * 60 * 60 * 1000 : 0
-  const recent = periodDays ? all.filter(s => s.timestamp >= cutoff) : all
+  const recentAll = periodDays ? all.filter(s => s.timestamp >= cutoff) : all
+  const recent = recentAll.filter(s => WPM_MODES.includes(s.mode))
   const avgAccuracy7d = recent.length
     ? Math.round(recent.reduce((sum, s) => sum + s.accuracy, 0) / recent.length)
     : null

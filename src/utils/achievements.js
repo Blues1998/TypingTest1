@@ -1,4 +1,5 @@
 import { getDailyStreak } from './streakUtils.js'
+import { WPM_MODES } from '../services/scoreService.js'
 
 // Tiers: bronze → silver → gold → diamond (1, requires all others)
 export const TIER_META = {
@@ -152,23 +153,24 @@ export const ACHIEVEMENTS = [
 const NON_DIAMOND_IDS = ACHIEVEMENTS.filter(a => a.tier !== 'diamond').map(a => a.id)
 
 function checkCondition(id, scores, streak, stored) {
+  const wpmScores = scores.filter(s => WPM_MODES.includes(s.mode))
   switch (id) {
     case 'first_test':     return scores.length >= 1
     case 'tests_10':       return scores.length >= 10
     case 'tests_50':       return scores.length >= 50
     case 'tests_100':      return scores.length >= 100
     case 'tests_500':      return scores.length >= 500
-    case 'wpm_30':         return scores.some(s => s.wpm >= 30)
-    case 'wpm_50':         return scores.some(s => s.wpm >= 50)
-    case 'wpm_75':         return scores.some(s => s.wpm >= 75)
-    case 'wpm_100':        return scores.some(s => s.wpm >= 100)
-    case 'wpm_120':        return scores.some(s => s.wpm >= 120)
-    case 'wpm_150':        return scores.some(s => s.wpm >= 150)
-    case 'acc_perfect':    return scores.some(s => s.accuracy >= 100)
-    case 'acc_5_perfect':  return scores.filter(s => s.accuracy >= 100).length >= 5
-    case 'no_mistakes_10': return scores.filter(s => s.accuracy >= 100).length >= 10
-    case 'consistency_80': return scores.some(s => s.consistency >= 80)
-    case 'consistency_90': return scores.some(s => s.consistency >= 90)
+    case 'wpm_30':         return wpmScores.some(s => s.wpm >= 30)
+    case 'wpm_50':         return wpmScores.some(s => s.wpm >= 50)
+    case 'wpm_75':         return wpmScores.some(s => s.wpm >= 75)
+    case 'wpm_100':        return wpmScores.some(s => s.wpm >= 100)
+    case 'wpm_120':        return wpmScores.some(s => s.wpm >= 120)
+    case 'wpm_150':        return wpmScores.some(s => s.wpm >= 150)
+    case 'acc_perfect':    return wpmScores.some(s => s.accuracy >= 100)
+    case 'acc_5_perfect':  return wpmScores.filter(s => s.accuracy >= 100).length >= 5
+    case 'no_mistakes_10': return wpmScores.filter(s => s.accuracy >= 100).length >= 10
+    case 'consistency_80': return wpmScores.some(s => s.consistency >= 80)
+    case 'consistency_90': return wpmScores.some(s => s.consistency >= 90)
     case 'streak_3':       return streak >= 3
     case 'streak_7':       return streak >= 7
     case 'streak_30':      return streak >= 30
