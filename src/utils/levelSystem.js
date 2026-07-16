@@ -60,5 +60,9 @@ export function getWordsByTier(allWords, tier) {
 
 export function hashText(text) {
   if (!text || text.length === 0) return 0
-  return text.length * 31 + text.charCodeAt(0) * 17 + text.charCodeAt(text.length - 1)
+  let h = 0
+  for (let i = 0; i < text.length; i++) {
+    h = (h * 31 + text.charCodeAt(i)) | 0
+  }
+  return h
 }
