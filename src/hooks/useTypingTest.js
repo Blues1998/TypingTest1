@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { safeGet, safeSet } from '../utils/safeStorage.js'
 import { calcWpm, calcAccuracy, calcConsistency } from '../utils/wpmCalc.js'
 import { pickPassage } from '../utils/dataLoader.js'
 import { savePersonalScore, getPersonalScores } from '../services/scoreService.js'
@@ -35,8 +36,8 @@ function resolveHindi(passage) {
 
 function readMutationFlags() {
   return {
-    numbers:     localStorage.getItem('typingtest_numbers')     === 'true',
-    punctuation: localStorage.getItem('typingtest_punctuation') === 'true',
+    numbers:     safeGet('typingtest_numbers')     === 'true',
+    punctuation: safeGet('typingtest_punctuation') === 'true',
   }
 }
 
@@ -96,7 +97,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
 
   useEffect(() => {
     const key = ghostKey(mode, difficulty, hashText(text))
-    const stored = localStorage.getItem(key)
+    const stored = safeGet(key)
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
@@ -155,7 +156,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     // Ghost replay
     if (finalWpm > 0 && validResult) {
       const key = ghostKey(mode, difficulty, hashText(textRef.current))
-      const existing = localStorage.getItem(key)
+      const existing = safeGet(key)
       let existingWpm = 0
       try { existingWpm = existing ? (JSON.parse(existing).wpm ?? 0) : 0 } catch { /* ignore */ }
       if (finalWpm > existingWpm) {
@@ -163,7 +164,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
           .slice(0, inputLengthRef.current)
           .filter(c => c.status !== 'correct')
           .length
-        localStorage.setItem(key, JSON.stringify({
+        safeSet(key, JSON.stringify({
           wpm: finalWpm, accuracy: finalAccuracy, timeTaken: finalElapsed,
           mistakes, text: textRef.current, timestamp: Date.now(), replay: replayRef.current,
         }))
@@ -287,7 +288,7 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     setRestartKey(k => k + 1)
 
     const key = ghostKey(mode, difficulty, hashText(newText))
-    const stored = localStorage.getItem(key)
+    const stored = safeGet(key)
     if (stored) {
       try {
         const parsed = JSON.parse(stored)

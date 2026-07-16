@@ -1,3 +1,5 @@
+import { safeGet, safeSet } from './safeStorage.js'
+
 const DAILY_PREFIX = 'typingtest_daily_'
 
 function dateKey(date = new Date()) {
@@ -8,17 +10,17 @@ function dateKey(date = new Date()) {
 }
 
 export function recordDailyCompletion() {
-  localStorage.setItem(dateKey(), '1')
+  safeSet(dateKey(), '1')
 }
 
 export function hasDoneToday() {
-  return localStorage.getItem(dateKey()) === '1'
+  return safeGet(dateKey()) === '1'
 }
 
 export function getDailyStreak() {
   let streak = 0
   const d = new Date()
-  while (localStorage.getItem(dateKey(d)) === '1') {
+  while (safeGet(dateKey(d)) === '1') {
     streak++
     d.setDate(d.getDate() - 1)
   }

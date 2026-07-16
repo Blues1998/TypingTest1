@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react'
+import { safeGet, safeSet } from '../utils/safeStorage.js'
 
 function getAudioContext() {
   if (typeof window === 'undefined') return null
@@ -79,7 +80,7 @@ function synthBoom(ctx) {
 
 export function useSound() {
   const [enabled, setEnabled] = useState(
-    () => localStorage.getItem('typingtest_sound') !== 'false'
+    () => safeGet('typingtest_sound') !== 'false'
   )
   const enabledRef = useRef(enabled)
   enabledRef.current = enabled
@@ -110,7 +111,7 @@ export function useSound() {
 
   function toggle() {
     const next = !enabledRef.current
-    localStorage.setItem('typingtest_sound', String(next))
+    safeSet('typingtest_sound', String(next))
     setEnabled(next)
   }
 
