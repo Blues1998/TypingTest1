@@ -2,12 +2,20 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { recordDailyCompletion, hasDoneToday, getDailyStreak } from '../../utils/streakUtils.js'
 
 const PREFIX = 'typingtest_daily_'
-const todayKey = PREFIX + new Date().toISOString().slice(0, 10)
+
+function localDateStr(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const todayKey = PREFIX + localDateStr(new Date())
 
 function dateKey(daysAgo) {
   const d = new Date()
   d.setDate(d.getDate() - daysAgo)
-  return PREFIX + d.toISOString().slice(0, 10)
+  return PREFIX + localDateStr(d)
 }
 
 describe('streakUtils', () => {
