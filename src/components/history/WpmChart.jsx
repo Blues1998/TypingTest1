@@ -6,13 +6,13 @@ function fmtDate(ts) {
 }
 
 export function WpmChart({ data }) {
-  if (!data.length) return null
-
   const chartData = useMemo(() => data.map((s, i) => ({
     label: fmtDate(s.timestamp),
     wpm: s.wpm,
     index: i + 1,
   })), [data])
+
+  if (!data.length) return null
 
   return (
     <ResponsiveContainer width="100%" height={200}>
