@@ -52,6 +52,8 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
   const quotes       = data?.quotes       || []
   const words        = data?.words        || []
 
+  const mutationFlagsRef = useRef(readMutationFlags())
+
   const pickInitial = useCallback(() => {
     if (customText) return customText
     const passage = pickPassage(mode, difficulty, { sentences, longTexts, codeSnippets, quotes }, null, wordCount)
@@ -76,8 +78,6 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
   const [ghostCaret, setGhostCaret] = useState(null)
   const [ghostWpm, setGhostWpm]   = useState(null)
   const [wordsTyped, setWordsTyped] = useState(0)
-
-  const mutationFlagsRef = useRef(readMutationFlags())
 
   const startTimeRef    = useRef(null)
   const timerRef        = useRef(null)
