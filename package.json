@@ -7,7 +7,7 @@
   "homepage": "https://blues1998.github.io/TypingTest1/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Blues1998/TypingTest1.git"
+    "url": "git+https://github.com/Blues1998/TypingTest1.git"
   },
   "scripts": {
     "dev": "vite",
