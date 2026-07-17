@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js'
+import { safeGet, safeSet, safeRemove } from '../utils/safeStorage.js'
 
 const LS_KEY = 'typingtest_scores'
 
@@ -9,7 +10,7 @@ export const WPM_MODES = ['stopwatch', 'countdown', 'words', 'quotes', 'daily', 
 
 function safeParseScores() {
   try {
-    return JSON.parse(localStorage.getItem(LS_KEY) || '[]')
+    return JSON.parse(safeGet(LS_KEY) || '[]')
   } catch {
     return []
   }
@@ -20,7 +21,7 @@ function safeParseScores() {
 export function savePersonalScore({ wpm, accuracy, timeTaken, mode, difficulty = null, consistency = null, keyStats = null }) {
   const all = safeParseScores()
   all.push({ wpm, accuracy, timeTaken, mode, difficulty, consistency, keyStats, timestamp: Date.now() })
-  try { localStorage.setItem(LS_KEY, JSON.stringify(all.slice(-200))) } catch { /* quota exceeded — skip */ }
+  safeSet(LS_KEY, JSON.stringify(all.slice(-200)))
 }
 
 export function getAggregateKeyStats() {
@@ -48,7 +49,7 @@ export function getPersonalScores(mode = null) {
 }
 
 export function clearPersonalScores() {
-  localStorage.removeItem(LS_KEY)
+  safeRemove(LS_KEY)
 }
 
 // ── Aggregate stats ────────────────────────────────────────────────────────

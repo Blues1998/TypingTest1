@@ -3,6 +3,7 @@ import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { useTheme } from '../hooks/useTheme.js'
 import { SUPPORTED_LANGS } from '../utils/levelSystem.js'
 import { TogglePill } from '../components/ui/TogglePill.jsx'
+import { safeGet, safeSet } from '../utils/safeStorage.js'
 
 // ── localStorage keys ─────────────────────────────────────────────────────
 
@@ -65,38 +66,38 @@ export function SettingsPage() {
   const { isDark, toggle: toggleTheme } = useTheme()
 
   const [caretStyle, setCaretStyleState] = useState(
-    () => localStorage.getItem(KEYS.CARET) || 'line'
+    () => safeGet(KEYS.CARET) || 'line'
   )
   const [font, setFontState] = useState(
-    () => localStorage.getItem(KEYS.FONT) || 'jetbrains'
+    () => safeGet(KEYS.FONT) || 'jetbrains'
   )
   const [sound, setSoundState] = useState(
-    () => localStorage.getItem(KEYS.SOUND) !== 'false'
+    () => safeGet(KEYS.SOUND) !== 'false'
   )
   const [lang, setLangState] = useState(
-    () => localStorage.getItem(KEYS.LANG) || 'en'
+    () => safeGet(KEYS.LANG) || 'en'
   )
 
   function setCaretStyle(v) {
     setCaretStyleState(v)
-    localStorage.setItem(KEYS.CARET, v)
+    safeSet(KEYS.CARET, v)
   }
 
   function setFont(v) {
     setFontState(v)
-    localStorage.setItem(KEYS.FONT, v)
+    safeSet(KEYS.FONT, v)
     applyFont(v)
   }
 
   function setSound(v) {
     setSoundState(v)
-    localStorage.setItem(KEYS.SOUND, String(v))
+    safeSet(KEYS.SOUND, String(v))
   }
 
   function setLang(v) {
     if (v === lang) return
     setLangState(v)
-    localStorage.setItem(KEYS.LANG, v)
+    safeSet(KEYS.LANG, v)
     window.dispatchEvent(new Event('typingtest-lang-changed'))
   }
 

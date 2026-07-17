@@ -1,12 +1,27 @@
+import { safeGet } from '../utils/safeStorage.js'
+
 const STOPWATCH_PREFIX = 'ghost_stopwatch_'
+
+function ghostKeys() {
+  // Enumerating localStorage can throw synchronously (Safari "Block All
+  // Cookies", sandboxed iframes) — degrade to no runs rather than crashing.
+  try {
+    const keys = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(STOPWATCH_PREFIX)) keys.push(key)
+    }
+    return keys
+  } catch {
+    return []
+  }
+}
 
 export function getGhostRuns() {
   const runs = []
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (!key || !key.startsWith(STOPWATCH_PREFIX)) continue
+  for (const key of ghostKeys()) {
     try {
-      const parsed = JSON.parse(localStorage.getItem(key))
+      const parsed = JSON.parse(safeGet(key))
       if (!parsed || typeof parsed.text !== 'string') continue
       // Key format: ghost_stopwatch_{difficulty}_{numericHash}
       const afterPrefix = key.slice(STOPWATCH_PREFIX.length)

@@ -1,13 +1,14 @@
 import { useState } from 'react'
+import { safeGet, safeSet } from '../../utils/safeStorage.js'
 
 export function TogglePill({ label, storageKey }) {
-  const [active, setActive] = useState(() => localStorage.getItem(storageKey) === 'true')
+  const [active, setActive] = useState(() => safeGet(storageKey) === 'true')
 
   function toggle(e) {
     e.stopPropagation()
     const next = !active
     setActive(next)
-    localStorage.setItem(storageKey, String(next))
+    safeSet(storageKey, String(next))
   }
 
   return (
