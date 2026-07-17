@@ -1,7 +1,35 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   savePersonalScore, getPersonalScores, clearPersonalScores, getStatsOverview, getAggregateKeyStats,
+  sanitizeUsername, USERNAME_MAX_LEN,
 } from '../../services/scoreService.js'
+
+describe('scoreService — sanitizeUsername', () => {
+  it('trims surrounding whitespace', () => {
+    expect(sanitizeUsername('  alice  ')).toBe('alice')
+  })
+
+  it('collapses internal whitespace and strips control characters', () => {
+    expect(sanitizeUsername('a\t\nb\u0000c')).toBe('a bc')
+  })
+
+  it('clamps to the max length', () => {
+    const long = 'x'.repeat(100)
+    expect(sanitizeUsername(long)).toHaveLength(USERNAME_MAX_LEN)
+  })
+
+  it('returns null for empty or whitespace-only input', () => {
+    expect(sanitizeUsername('')).toBeNull()
+    expect(sanitizeUsername('   ')).toBeNull()
+    expect(sanitizeUsername('\u0000\u001f')).toBeNull()
+  })
+
+  it('returns null for non-string input', () => {
+    expect(sanitizeUsername(null)).toBeNull()
+    expect(sanitizeUsername(42)).toBeNull()
+    expect(sanitizeUsername(undefined)).toBeNull()
+  })
+})
 
 function entry(overrides = {}) {
   return {

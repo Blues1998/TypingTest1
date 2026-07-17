@@ -95,10 +95,28 @@ export function getStatsOverview(periodDays = 7) {
 
 // ── Global (Supabase) ──────────────────────────────────────────────────────
 
+export const USERNAME_MAX_LEN = 20
+
+// Normalise a user-supplied display name before it is persisted or sent to the
+// backend: strip control characters, collapse whitespace and clamp the length.
+// Returns null when nothing usable remains.
+export function sanitizeUsername(raw) {
+  if (typeof raw !== 'string') return null
+  const cleaned = raw
+    .replace(/\s+/g, ' ')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim()
+  if (!cleaned) return null
+  return cleaned.slice(0, USERNAME_MAX_LEN)
+}
+
 export async function submitScore({ username, mode, wpm, accuracy, timeTaken, difficulty = null }) {
   if (!supabase) throw new Error('Supabase not configured')
+  const cleanName = sanitizeUsername(username)
+  if (!cleanName) throw new Error('Invalid username')
   const { error } = await supabase.from('scores').insert({
-    username,
+    username: cleanName,
     mode,
     wpm,
     accuracy,
