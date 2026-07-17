@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { sanitizeUsername, USERNAME_MAX_LEN } from '../../services/scoreService.js'
 
 export function UsernameModal({ onConfirm, onClose }) {
   const [value, setValue] = useState('')
 
   function handleSubmit(e) {
     e.preventDefault()
-    const name = value.trim()
-    if (name.length < 1) return
+    const name = sanitizeUsername(value)
+    if (!name) return
     onConfirm(name)
   }
 
@@ -33,7 +34,7 @@ export function UsernameModal({ onConfirm, onClose }) {
           <input
             type="text"
             autoFocus
-            maxLength={20}
+            maxLength={USERNAME_MAX_LEN}
             value={value}
             onChange={e => setValue(e.target.value)}
             placeholder="your name"
