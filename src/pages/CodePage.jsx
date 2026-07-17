@@ -1,11 +1,12 @@
 import { useContext, useEffect } from 'react'
-import { motion, useAnimation } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { DataContext } from '../App.jsx'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { CharDisplay } from '../components/typing/CharDisplay.jsx'
 import { ResultsCard } from '../components/typing/ResultsCard.jsx'
 import { useTypingTest } from '../hooks/useTypingTest.js'
-import { useSound } from '../hooks/useSound.js'
+import { useTypingFeedback } from '../hooks/useTypingFeedback.js'
+import { formatElapsed } from '../utils/formatTime.js'
 
 function detectLanguage(code) {
   return /\bdef \b|\bclass \b/.test(code) ? 'python' : 'javascript'
@@ -13,8 +14,7 @@ function detectLanguage(code) {
 
 export function CodePage() {
   const data = useContext(DataContext)
-  const { playClick, playError } = useSound()
-  const shakeControls = useAnimation()
+  const { shakeControls, reactToInput } = useTypingFeedback()
   const caretStyle = localStorage.getItem('typingtest_caret_style') || 'line'
 
   const {
@@ -36,21 +36,9 @@ export function CodePage() {
 
   function onInputChange(e) {
     const newVal = e.target.value
-    const prev = inputValue
-    if (newVal.length > prev.length) {
-      const i = newVal.length - 1
-      if (i < text.length && newVal[i] !== text[i]) {
-        playError()
-        shakeControls.start({ x: [0, -5, 5, -3, 3, 0], transition: { duration: 0.2 } })
-      } else {
-        playClick()
-      }
-    }
+    reactToInput(newVal, inputValue, text)
     handleInput(newVal)
   }
-
-  const secs = Math.floor(elapsed)
-  const ms   = Math.floor((elapsed % 1) * 10)
 
   return (
     <PageWrapper>
@@ -70,7 +58,7 @@ export function CodePage() {
 
         {/* Elapsed timer */}
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-sub text-xs tabular-nums">{secs}.{ms}s</span>
+          <span className="text-sub text-xs tabular-nums">{formatElapsed(elapsed)}</span>
           {liveWpm !== null && (
             <span className="text-sub text-xs tabular-nums">{liveWpm} wpm</span>
           )}

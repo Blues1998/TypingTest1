@@ -1,5 +1,8 @@
 import { getDailyStreak } from './streakUtils.js'
 import { WPM_MODES } from '../services/scoreService.js'
+import { safeGetJSON, safeSetJSON } from './safeStorage.js'
+
+const ACHIEVEMENTS_KEY = 'typingtest_achievements'
 
 // Tiers: bronze → silver → gold → diamond (1, requires all others)
 export const TIER_META = {
@@ -190,11 +193,7 @@ function checkCondition(id, scores, streak, stored) {
 }
 
 function safeParseAchievements() {
-  try {
-    return JSON.parse(localStorage.getItem('typingtest_achievements') || '[]')
-  } catch {
-    return []
-  }
+  return safeGetJSON(ACHIEVEMENTS_KEY, [])
 }
 
 export function checkAchievements(scores) {
@@ -210,7 +209,7 @@ export function checkAchievements(scores) {
   }
 
   if (newlyUnlocked.length > 0) {
-    localStorage.setItem('typingtest_achievements', JSON.stringify([...stored]))
+    safeSetJSON(ACHIEVEMENTS_KEY, [...stored])
     window.dispatchEvent(new CustomEvent('typingtest-achievements', { detail: newlyUnlocked }))
   }
 

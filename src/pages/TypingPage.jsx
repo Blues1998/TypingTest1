@@ -1,13 +1,13 @@
 import { useContext, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { motion, useAnimation } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { DataContext } from '../App.jsx'
 import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { CharDisplay } from '../components/typing/CharDisplay.jsx'
 import { TimerBar } from '../components/typing/TimerBar.jsx'
 import { ResultsCard } from '../components/typing/ResultsCard.jsx'
 import { useTypingTest } from '../hooks/useTypingTest.js'
-import { useSound } from '../hooks/useSound.js'
+import { useTypingFeedback } from '../hooks/useTypingFeedback.js'
 import { getDifficulty } from '../utils/levelSystem.js'
 
 const HINDI_PHONETIC_GUIDE = [
@@ -130,8 +130,7 @@ export function TypingPage() {
     handleInput, handleKeyDown, handleKeyUp, restart,
   } = useTypingTest({ mode, data, difficulty, customText, duration, wordCount })
 
-  const { playClick, playError } = useSound()
-  const shakeControls = useAnimation()
+  const { shakeControls, reactToInput } = useTypingFeedback()
   const [capsLock, setCapsLock] = useState(false)
   const [showHindiGuide, setShowHindiGuide] = useState(false)
   const [caretStyle] = useState(() => localStorage.getItem('typingtest_caret_style') || 'line')
@@ -139,16 +138,7 @@ export function TypingPage() {
 
   function onInputChange(e) {
     const newVal = e.target.value
-    const prev = inputValue
-    if (newVal.length > prev.length) {
-      const i = newVal.length - 1
-      if (i < text.length && newVal[i] !== text[i]) {
-        playError()
-        shakeControls.start({ x: [0, -5, 5, -3, 3, 0], transition: { duration: 0.2 } })
-      } else {
-        playClick()
-      }
-    }
+    reactToInput(newVal, inputValue, text)
     handleInput(newVal)
   }
 
