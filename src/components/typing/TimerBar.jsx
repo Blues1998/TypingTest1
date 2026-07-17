@@ -1,3 +1,5 @@
+import { formatElapsed } from '../../utils/formatTime.js'
+
 export function TimerBar({ mode, elapsed, remaining, duration = 60, wordCount = null, wordsTyped = 0 }) {
   if (mode === 'countdown') {
     const pct = Math.max(0, (remaining / duration) * 100)
@@ -36,11 +38,9 @@ export function TimerBar({ mode, elapsed, remaining, duration = 60, wordCount = 
   }
 
   // Stopwatch / daily / quotes / etc.
-  const secs = Math.floor(elapsed)
-  const ms = Math.floor((elapsed % 1) * 10)
   return (
     <div className="mb-6 text-sm text-sub tabular-nums">
-      {secs}.{ms}s
+      {formatElapsed(elapsed)}
     </div>
   )
 }

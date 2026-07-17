@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { safeGet, safeSet } from '../utils/safeStorage.js'
+import { safeGet, safeGetJSON, safeSetJSON } from '../utils/safeStorage.js'
 import { calcWpm, calcAccuracy, calcConsistency } from '../utils/wpmCalc.js'
 import { pickPassage } from '../utils/dataLoader.js'
 import { savePersonalScore, getPersonalScores } from '../services/scoreService.js'
@@ -14,6 +14,15 @@ function buildChars(text) {
 
 function ghostKey(mode, difficulty, textHash) {
   return `ghost_${mode}_${difficulty}_${textHash}`
+}
+
+// Load a stored ghost replay for `key`, ignoring records whose recorded text
+// no longer matches the passage on screen.
+function loadGhostReplay(key, expectedText) {
+  const parsed = safeGetJSON(key)
+  if (!parsed) return null
+  if (parsed.text !== undefined && parsed.text !== expectedText) return null
+  return parsed
 }
 
 function resolveText(passage) {
@@ -96,15 +105,10 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
   useEffect(() => { charsRef.current = chars }, [chars])
 
   useEffect(() => {
-    const key = ghostKey(mode, difficulty, hashText(text))
-    const stored = safeGet(key)
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored)
-        if (parsed.text !== undefined && parsed.text !== text) return
-        ghostReplayRef.current = parsed.replay
-        setGhostWpm(parsed.wpm)
-      } catch { /* ignore */ }
+    const parsed = loadGhostReplay(ghostKey(mode, difficulty, hashText(text)), text)
+    if (parsed) {
+      ghostReplayRef.current = parsed.replay
+      setGhostWpm(parsed.wpm)
     }
   }, [text, mode, difficulty])
 
@@ -156,18 +160,16 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     // Ghost replay
     if (finalWpm > 0 && validResult) {
       const key = ghostKey(mode, difficulty, hashText(textRef.current))
-      const existing = safeGet(key)
-      let existingWpm = 0
-      try { existingWpm = existing ? (JSON.parse(existing).wpm ?? 0) : 0 } catch { /* ignore */ }
+      const existingWpm = safeGetJSON(key)?.wpm ?? 0
       if (finalWpm > existingWpm) {
         const mistakes = charsRef.current
           .slice(0, inputLengthRef.current)
           .filter(c => c.status !== 'correct')
           .length
-        safeSet(key, JSON.stringify({
+        safeSetJSON(key, {
           wpm: finalWpm, accuracy: finalAccuracy, timeTaken: finalElapsed,
           mistakes, text: textRef.current, timestamp: Date.now(), replay: replayRef.current,
-        }))
+        })
       }
     }
   }, [mode, difficulty])
@@ -287,15 +289,10 @@ export function useTypingTest({ mode, data, difficulty = 'standard', customText,
     inputLengthRef.current = 0
     setRestartKey(k => k + 1)
 
-    const key = ghostKey(mode, difficulty, hashText(newText))
-    const stored = safeGet(key)
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored)
-        if (parsed.text !== undefined && parsed.text !== newText) return
-        ghostReplayRef.current = parsed.replay
-        setGhostWpm(parsed.wpm)
-      } catch { /* ignore */ }
+    const parsed = loadGhostReplay(ghostKey(mode, difficulty, hashText(newText)), newText)
+    if (parsed) {
+      ghostReplayRef.current = parsed.replay
+      setGhostWpm(parsed.wpm)
     }
   }
 

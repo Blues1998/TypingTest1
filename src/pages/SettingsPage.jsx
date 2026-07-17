@@ -3,6 +3,7 @@ import { PageWrapper } from '../components/layout/PageWrapper.jsx'
 import { useTheme } from '../hooks/useTheme.js'
 import { SUPPORTED_LANGS } from '../utils/levelSystem.js'
 import { TogglePill } from '../components/ui/TogglePill.jsx'
+import { PillButton } from '../components/ui/PillButton.jsx'
 
 // ── localStorage keys ─────────────────────────────────────────────────────
 
@@ -40,22 +41,6 @@ function SettingRow({ label, description, children }) {
       </div>
       <div className="flex items-center gap-1.5 shrink-0">{children}</div>
     </div>
-  )
-}
-
-function OptionPill({ label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="text-[11px] px-3 py-1 rounded-full border transition-colors duration-100"
-      style={{
-        borderColor: active ? 'var(--color-main)' : 'var(--color-border)',
-        color:       active ? 'var(--color-main)' : 'var(--color-sub)',
-        background:  active ? 'color-mix(in srgb, var(--color-main) 10%, transparent)' : 'transparent',
-      }}
-    >
-      {label}
-    </button>
   )
 }
 
@@ -117,7 +102,7 @@ export function SettingsPage() {
             { value: 'block',     label: 'block' },
             { value: 'underline', label: 'underline' },
           ].map(opt => (
-            <OptionPill
+            <PillButton
               key={opt.value}
               label={opt.label}
               active={caretStyle === opt.value}
@@ -135,7 +120,7 @@ export function SettingsPage() {
             { value: 'fira',      label: 'Fira Code' },
             { value: 'system',    label: 'system' },
           ].map(opt => (
-            <OptionPill
+            <PillButton
               key={opt.value}
               label={opt.label}
               active={font === opt.value}
@@ -152,7 +137,7 @@ export function SettingsPage() {
           description="language of the typing passages"
         >
           {SUPPORTED_LANGS.map(l => (
-            <OptionPill
+            <PillButton
               key={l.key}
               label={l.label}
               active={lang === l.key}
@@ -176,8 +161,8 @@ export function SettingsPage() {
           label="theme"
           description="color scheme for the interface"
         >
-          <OptionPill label="dark"  active={isDark}  onClick={() => { if (!isDark) toggleTheme() }} />
-          <OptionPill label="light" active={!isDark} onClick={() => { if (isDark)  toggleTheme() }} />
+          <PillButton label="dark"  active={isDark}  onClick={() => { if (!isDark) toggleTheme() }} />
+          <PillButton label="light" active={!isDark} onClick={() => { if (isDark)  toggleTheme() }} />
         </SettingRow>
 
         {/* ── Audio ── */}
@@ -187,8 +172,8 @@ export function SettingsPage() {
           label="sound effects"
           description="click and error sounds while typing"
         >
-          <OptionPill label="on"  active={sound}  onClick={() => setSound(true)} />
-          <OptionPill label="off" active={!sound} onClick={() => setSound(false)} />
+          <PillButton label="on"  active={sound}  onClick={() => setSound(true)} />
+          <PillButton label="off" active={!sound} onClick={() => setSound(false)} />
         </SettingRow>
       </div>
     </PageWrapper>
