@@ -6,6 +6,7 @@ import { CharDisplay } from '../components/typing/CharDisplay.jsx'
 import { ResultsCard } from '../components/typing/ResultsCard.jsx'
 import { useTypingTest } from '../hooks/useTypingTest.js'
 import { useSound } from '../hooks/useSound.js'
+import { safeGet } from '../utils/safeStorage.js'
 
 function detectLanguage(code) {
   return /\bdef \b|\bclass \b/.test(code) ? 'python' : 'javascript'
@@ -15,7 +16,7 @@ export function CodePage() {
   const data = useContext(DataContext)
   const { playClick, playError } = useSound()
   const shakeControls = useAnimation()
-  const caretStyle = localStorage.getItem('typingtest_caret_style') || 'line'
+  const caretStyle = safeGet('typingtest_caret_style') || 'line'
 
   const {
     text, chars, inputValue, caretIndex,

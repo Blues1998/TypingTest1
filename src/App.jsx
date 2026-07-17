@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, createContext } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { loadData } from './utils/dataLoader.js'
+import { safeGet } from './utils/safeStorage.js'
 import { useTheme } from './hooks/useTheme.js'
 import { NavBar } from './components/layout/NavBar.jsx'
 import { HomePage } from './pages/HomePage.jsx'
@@ -21,7 +22,7 @@ export const DataContext = createContext(null)
 // Apply font preference before first paint (synchronous, runs once at module load)
 document.documentElement.setAttribute(
   'data-font',
-  localStorage.getItem('typingtest_font') || 'jetbrains'
+  safeGet('typingtest_font') || 'jetbrains'
 )
 
 function AnimatedRoutes() {
@@ -49,7 +50,8 @@ function App() {
   const [data, setData] = useState(null)
 
   const fetchData = useCallback(() => {
-    loadData().then(setData).catch(() => {
+    loadData().then(setData).catch(err => {
+      console.error('Failed to load typing data; falling back to empty dataset.', err)
       setData({
         words: [],
         sentences: { rookie: [], standard: [], advanced: [], elite: [] },

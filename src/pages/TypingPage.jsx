@@ -9,6 +9,7 @@ import { ResultsCard } from '../components/typing/ResultsCard.jsx'
 import { useTypingTest } from '../hooks/useTypingTest.js'
 import { useSound } from '../hooks/useSound.js'
 import { getDifficulty } from '../utils/levelSystem.js'
+import { safeGet } from '../utils/safeStorage.js'
 
 const HINDI_PHONETIC_GUIDE = [
   { spelling: 'aa', sound: 'long a', example: 'baazaar' },
@@ -134,8 +135,8 @@ export function TypingPage() {
   const shakeControls = useAnimation()
   const [capsLock, setCapsLock] = useState(false)
   const [showHindiGuide, setShowHindiGuide] = useState(false)
-  const [caretStyle] = useState(() => localStorage.getItem('typingtest_caret_style') || 'line')
-  const [lang] = useState(() => localStorage.getItem('typingtest_lang') || 'en')
+  const [caretStyle] = useState(() => safeGet('typingtest_caret_style') || 'line')
+  const [lang] = useState(() => safeGet('typingtest_lang') || 'en')
 
   function onInputChange(e) {
     const newVal = e.target.value

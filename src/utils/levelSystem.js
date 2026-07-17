@@ -1,3 +1,5 @@
+import { safeGet, safeSet } from './safeStorage.js'
+
 export const SUPPORTED_LANGS = [
   { key: 'en', label: 'EN' },
   { key: 'es', label: 'ES' },
@@ -28,11 +30,11 @@ export function getRank(bestWpm) {
 const prefKey = mode => `typingtest_difficulty_${mode}`
 
 export function getDifficulty(mode) {
-  return localStorage.getItem(prefKey(mode)) || 'standard'
+  return safeGet(prefKey(mode)) || 'standard'
 }
 
 export function setDifficulty(mode, tier) {
-  localStorage.setItem(prefKey(mode), tier)
+  safeSet(prefKey(mode), tier)
 }
 
 // ── Tier definitions ───────────────────────────────────────────────────────

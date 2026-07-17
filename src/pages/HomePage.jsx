@@ -14,6 +14,7 @@ import {
 } from '../utils/levelSystem.js'
 import { getDailyStreak, hasDoneToday } from '../utils/streakUtils.js'
 import { TogglePill } from '../components/ui/TogglePill.jsx'
+import { safeGet, safeSet } from '../utils/safeStorage.js'
 
 // ── Storage helpers ────────────────────────────────────────────────────────
 
@@ -23,8 +24,8 @@ const LS_NUMS = 'typingtest_numbers'
 const LS_PUNC = 'typingtest_punctuation'
 const LS_LANG = 'typingtest_lang'
 
-function getCountdownDur() { return parseInt(localStorage.getItem(LS_DUR) || '60', 10) }
-function getWordCount()    { return parseInt(localStorage.getItem(LS_WCNT) || '25', 10) }
+function getCountdownDur() { return parseInt(safeGet(LS_DUR) || '60', 10) }
+function getWordCount()    { return parseInt(safeGet(LS_WCNT) || '25', 10) }
 
 // ── Mode configs ───────────────────────────────────────────────────────────
 
@@ -98,7 +99,7 @@ function DurationPills() {
   function pick(e, dur) {
     e.stopPropagation()
     setActive(dur)
-    localStorage.setItem(LS_DUR, String(dur))
+    safeSet(LS_DUR, String(dur))
   }
 
   return (
@@ -127,7 +128,7 @@ function WordCountPills() {
   function pick(e, n) {
     e.stopPropagation()
     setActive(n)
-    localStorage.setItem(LS_WCNT, String(n))
+    safeSet(LS_WCNT, String(n))
   }
 
   return (
@@ -195,13 +196,13 @@ function SectionLabel({ children, delay = 0 }) {
 
 
 function LangPills() {
-  const [active, setActive] = useState(() => localStorage.getItem(LS_LANG) || 'en')
+  const [active, setActive] = useState(() => safeGet(LS_LANG) || 'en')
 
   function pick(e, lang) {
     e.stopPropagation()
     if (lang === active) return
     setActive(lang)
-    localStorage.setItem(LS_LANG, lang)
+    safeSet(LS_LANG, lang)
     window.dispatchEvent(new Event('typingtest-lang-changed'))
   }
 

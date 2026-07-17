@@ -1,12 +1,17 @@
+import { safeGet } from './safeStorage.js'
+
 const _langCache = new Map()
 
 export const toRoman = item => (item && typeof item === 'object') ? (item.roman || '') : (item || '')
 
 export async function loadData() {
   const base = import.meta.env.BASE_URL
-  const get = path => fetch(`${base}${path}`).then(r => r.json())
+  const get = path => fetch(`${base}${path}`).then(r => {
+    if (!r.ok) throw new Error(`Failed to fetch ${path}: ${r.status} ${r.statusText}`)
+    return r.json()
+  })
 
-  const lang = localStorage.getItem('typingtest_lang') || 'en'
+  const lang = safeGet('typingtest_lang') || 'en'
   const langFile = lang === 'en' ? 'data/sentences.json'
     : lang === 'es' ? 'data/sentences_es.json'
     : lang === 'fr' ? 'data/sentences_fr.json'
